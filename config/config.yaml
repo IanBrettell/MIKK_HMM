@@ -1,0 +1,61 @@
+####################
+# Locations
+####################
+raw_data_dir:
+    /hps/nobackup/birney/users/ian/MIKK_all
+working_dir:
+    /hps/nobackup/birney/users/ian/MIKK_HMM
+tmpdir:
+    /hps/nobackup/birney/users/ian/tmp
+google_drive_dir:
+    # NOTE: you need to set up this (or some other) drive with `rclone config` first
+    EBI_Google_Drive:pilot_paper/figs
+####################
+# Parameters
+####################
+datasets:
+    - F0
+    - F2
+    - Kiyosu_CC
+seconds_interval:
+    - 0.05
+    - 0.08
+    - 0.1
+    - 0.15
+    - 0.2
+    - 0.3
+    - 0.5
+    - 1
+hmm_variables:
+    dist_angle:
+        - distance
+        - angle
+n_states:
+    - 5
+    - 10
+    - 12
+    - 14
+    - 15
+    - 16
+    - 17
+    - 18
+    - 20
+####################
+# Containers
+####################
+opencv:
+    /hps/nobackup/birney/users/ian/containers/pilot_paper/opencv_4.5.1.sif
+ffmpeg:
+    docker://jrottenberg/ffmpeg:4.4-ubuntu
+idtrackerai:
+    # NOTE: Dockerfile for this container: workflow/envs/idtrackerai/Dockerfile
+    docker://saulpierottiebi/idtrackerai_cpu_gui:latest
+rocker_tidyverse:
+    docker://rocker/tidyverse:4.1.2
+hmmlearn:
+    /hps/nobackup/birney/users/ian/containers/pilot_paper/hmmlearn_0.2.7.sif
+# Instructions on building container in config/init.sh
+R:
+    /hps/nobackup/birney/users/ian/containers/pilot_paper/R_4.1.2.sif
+R_4.2.0:
+    /hps/nobackup/birney/users/ian/containers/pilot_paper/R_4.2.0.sif
