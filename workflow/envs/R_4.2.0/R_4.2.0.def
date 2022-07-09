@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: rocker/tidyverse:4.2.0
+
+%post
+
+    # Install packages required for R packages
+    apt update 
+    apt install -y libxt6 libmagick++-dev libavfilter-dev ffmpeg libpoppler-cpp-dev
+
+    # Install CRAN packages
+    install2.r --error \
+        here \
+        cowplot \
+        ggrepel \
+        fishualize \
+        wesanderson \
+        plotly \
+        bookdown \
+        ggpubr \
+        rstatix \
+        ggbeeswarm \
+        ggridges \
+        magick \
+        gganimate \
+        av \
+        pdftools

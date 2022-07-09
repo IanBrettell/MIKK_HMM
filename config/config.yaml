@@ -1,9 +1,9 @@
 ####################
 # Locations
 ####################
-raw_data_dir:
+rawdir:
     /hps/nobackup/birney/users/ian/MIKK_all
-working_dir:
+workdir:
     /hps/nobackup/birney/users/ian/MIKK_HMM
 tmpdir:
     /hps/nobackup/birney/users/ian/tmp
@@ -58,4 +58,6 @@ hmmlearn:
 R:
     /hps/nobackup/birney/users/ian/containers/pilot_paper/R_4.1.2.sif
 R_4.2.0:
-    /hps/nobackup/birney/users/ian/containers/pilot_paper/R_4.2.0.sif
+    /hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
+hmmlearn:
+    /hps/nobackup/birney/users/ian/containers/pilot_paper/hmmlearn_0.2.7.sif

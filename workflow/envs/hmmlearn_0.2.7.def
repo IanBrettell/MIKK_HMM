@@ -1,0 +1,6 @@
+Bootstrap: docker
+From: python:3.10.3-slim
+
+%post
+    pip install hmmlearn==0.2.7
+    pip install pandas

@@ -1,0 +1,33 @@
+include: "rules/00_common.smk"
+include: "rules/01_setup.smk"
+#include: "rules/02_param_optim.smk"
+
+##### Target rules #####
+
+rule all:
+    input:
+######################
+## 01_setup.smk
+######################
+        expand(rules.merge_datasets.output,
+                interval = config["seconds_interval"]
+        ),
+        expand(rules.run_hmm.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
+        expand(rules.split_datasets.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
+        expand(rules.hmm_concordance_in.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+        ),
+        expand(rules.hmm_concordance_out.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),

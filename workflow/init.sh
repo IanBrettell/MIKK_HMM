@@ -1,0 +1,51 @@
+####################
+# Codon cluster
+####################
+
+ssh codon
+module load singularity-3.7.0-gcc-9.3.0-dp5ffrp
+bsub -Is bash
+# If needing to copy videos from FTP (rule copy_videos),
+# Need to use the datamover queue so that it can see the FTP drive:
+# bsub -M 20000 -q datamover -Is bash
+cd /hps/software/users/birney/ian/repos/MIKK_HMM
+conda activate snakemake_6.15.5
+# Regular
+snakemake \
+  --jobs 5000 \
+  --latency-wait 100 \
+  --cluster-config config/cluster.yaml \
+  --cluster 'bsub -g /snakemake_bgenie -J {cluster.name} -q {cluster.queue} -n {cluster.n} -M {cluster.memory} -o {cluster.outfile}' \
+  --keep-going \
+  --rerun-incomplete \
+  --use-conda \
+  --use-singularity \
+  --restart-times 0 \
+  -s workflow/Snakefile \
+  -p
+
+# R container build
+bsub -M 20000 -Is bash
+module load singularity-3.7.0-gcc-9.3.0-dp5ffrp
+cd /hps/software/users/birney/ian/repos/MIKK_HMM
+RCONT=/hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
+singularity build --remote \
+    $RCONT \
+    workflow/envs/R_4.2.0/R_4.2.0.def
+
+# RStudio container run
+ssh proxy-codon
+bsub -M 50000 -Is bash
+module load singularity-3.7.0-gcc-9.3.0-dp5ffrp
+cd /hps/software/users/birney/ian/repos/MIKK_HMM
+RCONT=/hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
+singularity shell --bind /hps/nobackup/birney/users/ian/rstudio_db:/var/lib/rstudio-server \
+                  --bind /hps/nobackup/birney/users/ian/tmp:/tmp \
+                  --bind /hps/nobackup/birney/users/ian/run:/run \
+                  $RCONT
+rstudio-server kill-all
+rserver \
+    --rsession-config-file /hps/software/users/birney/ian/repos/MIKK_HMM/workflow/envs/R_4.2.0/rsession.conf \
+    --server-user brettell
+
+ssh -L 8787:hl-codon-37-04:8787 proxy-codon
