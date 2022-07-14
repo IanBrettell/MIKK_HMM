@@ -4,3 +4,5 @@ __default__:
   name: "{rule}.{wildcards}"
   queue: short
   outfile: "{log}"
+bwa_mem2_mem:
+  n: "{threads}"

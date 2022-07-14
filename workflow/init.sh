@@ -9,7 +9,7 @@ bsub -Is bash
 # Need to use the datamover queue so that it can see the FTP drive:
 # bsub -M 20000 -q datamover -Is bash
 cd /hps/software/users/birney/ian/repos/MIKK_HMM
-conda activate snakemake_6.15.5
+conda activate snakemake_7.8.2
 # Regular
 snakemake \
   --jobs 5000 \
@@ -35,7 +35,7 @@ singularity build --remote \
 
 # RStudio container run
 ssh proxy-codon
-bsub -M 50000 -Is bash
+bsub -M 50000 -q short -Is bash
 module load singularity-3.7.0-gcc-9.3.0-dp5ffrp
 cd /hps/software/users/birney/ian/repos/MIKK_HMM
 RCONT=/hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
@@ -49,3 +49,12 @@ rserver \
     --server-user brettell
 
 ssh -L 8787:hl-codon-37-04:8787 proxy-codon
+
+# Faspex
+## Download aspera
+mamba install -c hcc aspera-cli
+# Get URL
+fURL=`aspera faspex list --user="felix.loosli@kit.edu" \
+                         --host="faspex.embl.de" \
+                         --password='MIKKF2#' \
+                         --insecure | grep "ˆFaspex URL: " | awk '{ print $NF }'`

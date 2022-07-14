@@ -97,7 +97,7 @@ rule hmm_concordance_in:
             "logs/hmm_cocordance_input/{interval}.log"
         ),
     resources:
-        mem_mb = lambda wildcards, attempt: attempt * 15000
+        mem_mb = lambda wildcards, attempt: attempt * 30000
     container:
         config["rocker_tidyverse"]
     script:
@@ -123,7 +123,7 @@ rule hmm_concordance_out:
         variables = lambda wildcards: config["hmm_variables"][wildcards.variables]
     resources:
         # start at 5000
-        mem_mb = lambda wildcards, attempt: attempt * 15000,
+        mem_mb = lambda wildcards, attempt: attempt * 50000,
     container:
         config["hmmlearn"]
     script:

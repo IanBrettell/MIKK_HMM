@@ -10,9 +10,23 @@ tmpdir:
 google_drive_dir:
     # NOTE: you need to set up this (or some other) drive with `rclone config` first
     EBI_Google_Drive:pilot_paper/figs
+mikk_vcf:
+    /nfs/research/birney/projects/indigene/datafreeze/14-03-2019/vcf/medaka_inbred_panel_ensembl_new_reference_release_94.vcf.gz
+sequence_dir:
+    /nfs/research/birney/projects/indigene/raw_data/genecore/ian_behaviour
+runs:
+    - AAAMKYVHV
+    - AAAN233HV
 ####################
 # Parameters
 ####################
+ref:
+    # ensembl species name
+    species: oryzias_latipes
+    # ensembl release
+    release: 104
+    # genome build
+    build: ASM223467v1
 datasets:
     - F0
     - F2
@@ -43,6 +57,8 @@ n_states:
 ####################
 # Containers
 ####################
+bash:
+    docker://bash:5.1.12
 opencv:
     /hps/nobackup/birney/users/ian/containers/pilot_paper/opencv_4.5.1.sif
 ffmpeg:
@@ -61,3 +77,9 @@ R_4.2.0:
     /hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
 hmmlearn:
     /hps/nobackup/birney/users/ian/containers/pilot_paper/hmmlearn_0.2.7.sif
+bwa-mem2:
+    docker://quay.io/biocontainers/bwa-mem2:2.2.1--he513fc3_0
+samtools:
+    docker://quay.io/biocontainers/samtools:1.13--h8c37831_0
+picard:
+    docker://quay.io/biocontainers/picard:2.9.2--2

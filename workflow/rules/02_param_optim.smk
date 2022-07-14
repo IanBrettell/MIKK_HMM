@@ -28,7 +28,7 @@ rule recode_concordance:
 
 rule run_kruskal_wallis:
     input:
-        expand(rules.run_hmm.output,
+        expand(rules.split_datasets.output.F0,
                 interval = config["seconds_interval"],
                 variables = config["hmm_variables"],
                 n_states = config["n_states"]               
