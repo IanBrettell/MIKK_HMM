@@ -26,6 +26,27 @@ rule create_seq_sample_file:
 SAMPLES = pd.read_csv("config/seq_sample_file_AAAMKYVHV.txt",
                       sep = '\t')['sample'].values.tolist()
 
+# Get list of F2 samples and pat and mat lines (to zip)
+df_f2 = pd.read_csv(config["F2_samples_file"])
+SAMPLES_ZIP = df_f2['finclip_id']
+PAT_ZIP = df_f2['pat_line'].tolist()
+MAT_ZIP = df_f2['mat_line'].tolist()
+
+# Create new lists of unique combinations of paternal and maternal lines
+## Combine lists
+PAT_MAT = zip(PAT_ZIP, MAT_ZIP)
+## Get unique combinations
+PM_LIST = set(list(PAT_MAT))
+## Write to new lists
+PAT_UQ = [i[0] for i in PM_LIST]
+MAT_UQ = [i[1] for i in PM_LIST]
+
+# Get separate lists for F2 and Kiyosu closed-capture
+F2_mask = [not i.startswith('K') for i in SAMPLES]
+KCC_mask = [i.startswith('K') for i in SAMPLES]
+
+SAMPLES_KCC = [i for i in SAMPLES if i.startswith('K')]
+
 # Get paired sequence files for each run/sample combination
 def get_seq_paths(wildcards):
     df = pd.read_csv("config/seq_sample_file_" + wildcards.run + ".txt",
@@ -85,7 +106,7 @@ rule sort_sam:
         ),
     params:
         sort_order="coordinate",
-        extra=lambda wildcards: "VALIDATION_STRINGENCY=LENIENT tmpdir=" + config["tmpdir"],
+        extra=lambda wildcards: "VALIDATION_STRINGENCY=LENIENT TMP_DIR=" + config["tmpdir"],
     container:
         config["picard"]
     resources:
@@ -119,7 +140,7 @@ rule mark_duplicates:
             "logs/mark_duplicates/hdrr/{run}/{sample}.log"
         ),
     params:
-        extra = lambda wildcards: "REMOVE_DUPLICATES=true tmpdir=" + config["tmpdir"]
+        extra = lambda wildcards: "REMOVE_DUPLICATES=true TMP_DIR=" + config["tmpdir"]
     container:
         config["picard"]
     resources:
@@ -136,21 +157,56 @@ rule mark_duplicates:
                 2> {log}
         """
 
+rule merge_bams:
+    input:
+        expand(os.path.join(
+            config["workdir"],
+            "bams/hdrr/bwamem2/marked/{run}/{{sample}}.bam"),
+                run = config["runs"]
+        ),
+    output:
+        bam = os.path.join(
+            config["workdir"],
+            "bams/hdrr/bwamem2/merged/{sample}.bam"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/merge_bams/{sample}.log"
+        ),
+    params:
+        extra = lambda wildcards: "VALIDATION_STRINGENCY=LENIENT TMP_DIR=" + config["tmpdir"],
+        in_files = lambda wildcards, input: " I=".join(input)
+    resources:
+        java_mem_mb=1024,
+        mem_mb = 5000
+    container:
+        config["picard"]
+    shell:
+        """
+        picard MergeSamFiles \
+            -Xmx{resources.java_mem_mb}M \
+            {params.extra} \
+            INPUT={params.in_files} \
+            OUTPUT={output} \
+                &> {log}
+        """
+
 rule samtools_index:
     input:
-        rules.mark_duplicates.output,
+        rules.merge_bams.output,
     output:
         os.path.join(
             config["workdir"],
-            "bams/hdrr/bwamem2/marked/{run}/{sample}.bam.bai"
+            "bams/hdrr/bwamem2/merged/{sample}.bam.bai"
         ),
     log:
         os.path.join(
             config["workdir"], 
-            "logs/samtools_index/hdrr/{run}/{sample}.log"
+            "logs/samtools_index/hdrr/{sample}.log"
         ),
     resources:
-        mem_mb = 100
+        mem_mb = 2000
     container:
         config["samtools"]
     shell:

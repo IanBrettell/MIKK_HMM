@@ -14,6 +14,8 @@ mikk_vcf:
     /nfs/research/birney/projects/indigene/datafreeze/14-03-2019/vcf/medaka_inbred_panel_ensembl_new_reference_release_94.vcf.gz
 sequence_dir:
     /nfs/research/birney/projects/indigene/raw_data/genecore/ian_behaviour
+F2_samples_file:
+    config/F2_samples_converted.csv
 runs:
     - AAAMKYVHV
     - AAAN233HV
@@ -27,6 +29,9 @@ ref:
     release: 104
     # genome build
     build: ASM223467v1
+contigs:
+    - 1
+    - 24
 datasets:
     - F0
     - F2
@@ -83,3 +88,7 @@ samtools:
     docker://quay.io/biocontainers/samtools:1.13--h8c37831_0
 picard:
     docker://quay.io/biocontainers/picard:2.9.2--2
+bcftools_1.14:
+    docker://quay.io/biocontainers/bcftools:1.14--hde04aa1_1
+bam-readcount:
+    docker://quay.io/biocontainers/bam-readcount:0.8--py36pl526h94a8ba4_4

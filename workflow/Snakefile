@@ -3,6 +3,8 @@ include: "rules/01_ref.smk"
 include: "rules/01_setup.smk"
 #include: "rules/02_param_optim.smk"
 include: "rules/03_mapping.smk"
+include: "rules/04_F2_loci.smk"
+include: "rules/05_F2_calling.smk"
 
 ##### Target rules #####
 
@@ -48,6 +50,31 @@ rule all:
 #                run = config["runs"]
 #        ),
 #        expand(rules.samtools_index.output,
-#                run = config["runs"],
 #                sample = SAMPLES
-#        )
+#        ),
+######################
+## 04_F2_loci.smk
+######################
+        expand(rules.extract_parental_snps.output,
+                zip,
+                pat = PAT_UQ,
+                mat = MAT_UQ
+        ),
+        expand(rules.extract_homo_div_snps.output,
+                zip,
+                pat = PAT_UQ,
+                mat = MAT_UQ
+        ),
+######################
+## 05_F2_calling.smk
+######################
+        expand(rules.bam_readcount_F2.output,
+                zip,
+                sample = SAMPLES_ZIP,
+                pat = PAT_ZIP,
+                mat = MAT_ZIP
+        ),
+######################
+## 05_KCC_calling.smk
+######################
+        expand(rules.merge_variants.output),
