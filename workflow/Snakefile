@@ -5,6 +5,7 @@ include: "rules/01_setup.smk"
 include: "rules/03_mapping.smk"
 include: "rules/04_F2_loci.smk"
 include: "rules/05_F2_calling.smk"
+include: "rules/05_KCC_calling.smk"
 
 ##### Target rules #####
 
@@ -21,28 +22,28 @@ rule all:
 ######################
 ## 01_setup.smk
 ######################
-#        expand(rules.merge_datasets.output,
-#                interval = config["seconds_interval"]
-#        ),
-#        expand(rules.run_hmm.output,
-#                interval = config["seconds_interval"],
-#                variables = config["hmm_variables"],
-#                n_states = config["n_states"]
-#        ),
-#        expand(rules.split_datasets.output,
-#                interval = config["seconds_interval"],
-#                variables = config["hmm_variables"],
-#                n_states = config["n_states"]
-#        ),
-#        expand(rules.hmm_concordance_in.output,
-#                interval = config["seconds_interval"],
-#                variables = config["hmm_variables"],
-#        ),
-#        expand(rules.hmm_concordance_out.output,
-#                interval = config["seconds_interval"],
-#                variables = config["hmm_variables"],
-#                n_states = config["n_states"]
-#        ),
+        expand(rules.merge_datasets.output,
+                interval = config["seconds_interval"]
+        ),
+        expand(rules.run_hmm.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
+        expand(rules.split_datasets.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
+        expand(rules.hmm_concordance_in.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+        ),
+        expand(rules.hmm_concordance_out.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
 ######################
 ## 03_mapping.smk
 ######################
@@ -73,6 +74,10 @@ rule all:
                 sample = SAMPLES_ZIP,
                 pat = PAT_ZIP,
                 mat = MAT_ZIP
+        ),
+        expand(rules.make_hmm_input.output,
+                max_reads = "None",
+                bin_length = config["bin_length"]
         ),
 ######################
 ## 05_KCC_calling.smk

@@ -59,6 +59,9 @@ n_states:
     - 17
     - 18
     - 20
+bin_length:
+    - 5000
+    - 20000
 ####################
 # Containers
 ####################
@@ -92,3 +95,5 @@ bcftools_1.14:
     docker://quay.io/biocontainers/bcftools:1.14--hde04aa1_1
 bam-readcount:
     docker://quay.io/biocontainers/bam-readcount:0.8--py36pl526h94a8ba4_4
+gatk:
+    docker://quay.io/biocontainers/gatk4:4.2.0.0--0
