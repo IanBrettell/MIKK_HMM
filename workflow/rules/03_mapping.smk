@@ -216,3 +216,50 @@ rule samtools_index:
             {output[0]} \
                 2> {log}
         """
+
+rule get_coverage:
+    input:
+        bam = rules.merge_bams.output,
+        ind = rules.samtools_index.output,
+    output:
+        os.path.join(
+            config["workdir"],
+            "coverage/hdrr/bwamem2/{sample}.txt"
+        ),
+    log:
+        os.path.join(
+            config["workdir"], 
+            "logs/get_coverage/hdrr/{sample}.log"
+        ),
+    resources:
+        mem_mb = 2000
+    container:
+        config["samtools"]
+    shell:
+        """
+        samtools coverage \
+            {input.bam} >\
+                {output[0]} \
+                    2> {log}
+        """
+
+rule plot_coverage:
+    input:
+        expand(rules.get_coverage.output,
+            sample = SAMPLES
+        )
+    output:
+        png = "book/figs/coverage/all.png",
+        pdf = "book/figs/coverage/all.pdf"
+    log:
+        os.path.join(
+            config["workdir"], 
+            "logs/plot_coverage/all.log"
+        ),
+    resources:
+        mem_mb = 2000
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_coverage.R"
+

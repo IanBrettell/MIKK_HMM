@@ -1,16 +1,22 @@
 include: "rules/00_common.smk"
 include: "rules/01_ref.smk"
-include: "rules/01_setup.smk"
-#include: "rules/02_param_optim.smk"
+include: "rules/01_hmm.smk"
+include: "rules/02_param_optim.smk"
 include: "rules/03_mapping.smk"
 include: "rules/04_F2_loci.smk"
 include: "rules/05_F2_calling.smk"
 include: "rules/05_KCC_calling.smk"
+include: "rules/06_F0_state_freq.smk"
+include: "rules/08_figs.smk"
 
 ##### Target rules #####
 
 rule all:
     input:
+######################
+## 00_common.smk
+######################
+        rules.get_line_ranks_and_colours.output,
 ######################
 ## 01_ref.smk
 ######################
@@ -20,7 +26,7 @@ rule all:
         rules.bwa_mem2_index.output,
         rules.get_chrom_lengths.output,
 ######################
-## 01_setup.smk
+## 01_hmm.smk
 ######################
         expand(rules.merge_datasets.output,
                 interval = config["seconds_interval"]
@@ -44,6 +50,15 @@ rule all:
                 variables = config["hmm_variables"],
                 n_states = config["n_states"]
         ),
+        expand(rules.polar_plots.output,
+                interval = config["seconds_interval"],
+                variables = config["hmm_variables"],
+                n_states = config["n_states"]
+        ),
+######################
+## 02_param_optim.smk
+######################
+        rules.compare_params.output,
 ######################
 ## 03_mapping.smk
 ######################
@@ -53,6 +68,9 @@ rule all:
 #        expand(rules.samtools_index.output,
 #                sample = SAMPLES
 #        ),
+        expand(rules.get_coverage.output,
+                sample = SAMPLES
+        ),
 ######################
 ## 04_F2_loci.smk
 ######################
@@ -76,10 +94,28 @@ rule all:
                 mat = MAT_ZIP
         ),
         expand(rules.make_hmm_input.output,
-                max_reads = "None",
                 bin_length = config["bin_length"]
         ),
+        expand(rules.true_hmmlearn.output,
+                bin_length = config["bin_length"],
+                cov = config["hmm_covariance"]
+        ),        
 ######################
 ## 05_KCC_calling.smk
 ######################
         expand(rules.merge_variants.output),
+######################
+## 06_F0_state_freqg.smk
+######################
+        expand(rules.state_freq_F0.output,
+                interval = 0.05,
+                variables = "dist_angle",
+                n_states = 15
+        ),
+######################
+## 08_figs.smk
+######################
+        expand(rules.karyoplots.output,
+                bin_length = config["bin_length"],
+                cov = config["hmm_covariance"]
+        )

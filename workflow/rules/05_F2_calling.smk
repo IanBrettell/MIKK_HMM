@@ -59,7 +59,7 @@ rule make_hmm_input:
             mat = MAT_ZIP
         ),
     output:
-        os.path.join(
+        csv = os.path.join(
             config["workdir"],
             "hmm_in/F2/hdrr/{bin_length}.csv"
         ),
@@ -76,4 +76,32 @@ rule make_hmm_input:
         config["R_4.2.0"]
     script:
         "../scripts/make_hmm_input.R"
+
+# Test HMM with hmmlearn
+rule true_hmmlearn:
+    input:
+        rules.make_hmm_input.output,
+    output:
+        csv = os.path.join(
+            config["workdir"],
+            "hmm_out/F2/hdrr/hmmlearn_true/{bin_length}/{cov}.csv"
+        ),
+        pck = os.path.join(
+            config["workdir"],
+            "hmm_out/F2/hdrr/hmmlearn_true/{bin_length}/{cov}.pickle"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/true_hmmlearn/hdrr/{bin_length}/{cov}.log"
+        ),
+    params:
+        cov = "{cov}",
+        #low_cov_samples = lambda wildcards: config["low_cov_samples"]
+    resources:
+        mem_mb = 20000
+    container:
+        config["hmmlearn"]
+    script:
+        "../scripts/true_hmmlearn.py"
 

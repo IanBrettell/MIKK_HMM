@@ -1,5 +1,11 @@
 # Notes
 
+## 18 July 2022
+
+Best combination of HMM parameters is:
+    - 0.05 interval
+    - 15 states
+
 ## 15 July 2022
 
 * `config/F2_samples_converted.csv` was copied from the repo/path `MIKK_F2_tracking/config/samples_converted.csv`.

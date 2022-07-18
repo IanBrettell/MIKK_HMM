@@ -11,8 +11,8 @@ library(tidyverse)
 # Get variables
 
 ## Debug
-#IN = list("/hps/nobackup/birney/users/ian/pilot/hmm_out/0.5/dist_angle/10.csv",
-#          "/hps/nobackup/birney/users/ian/pilot/hmm_out/0.5/dist_angle/15.csv")
+IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/1/dist_angle/20/F0.csv",
+          "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/1/dist_angle/5/F0.csv")
 
 ## True
 IN = snakemake@input
@@ -23,7 +23,7 @@ OUT = snakemake@output[[1]]
 filenames = tibble(FILE = unlist(IN)) %>% 
   tidyr::separate(.,
                   FILE,
-                  into = c(rep(NA, 8), "INTERVAL", "VARIABLES", "N_STATES"),
+                  into = c(rep(NA, 8), "INTERVAL", "VARIABLES", "N_STATES", NA),
                   sep = "/") %>% 
   # remove file ext
   dplyr::mutate(N_STATES = stringr::str_remove(N_STATES, ".csv"))
@@ -43,6 +43,10 @@ kw_tests = purrr::map(IN, readr::read_csv) %>%
       # add `line` %>% 
       dplyr::mutate(line = dplyr::case_when(fish == "ref" ~ ref_fish,
                                             fish == "test" ~ test_fish)) %>% 
+      # recode outbred as single line
+      dplyr::mutate(line = dplyr::if_else(stringr::str_detect(line, "outbred"),
+                                          "outbred",
+                                          line)) %>% 
       # get proportions of time spent in each state
       ## count rows per fish per state
       dplyr::count(assay, date, time, quadrant, fish, line, state) %>% 

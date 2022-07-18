@@ -4,5 +4,7 @@ __default__:
   name: "{rule}.{wildcards}"
   queue: standard
   outfile: "{log}"
+run_kruskal_wallis:
+  queue: bigmem
 bwa_mem2_mem:
   n: "{threads}"

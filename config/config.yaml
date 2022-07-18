@@ -19,6 +19,8 @@ F2_samples_file:
 runs:
     - AAAMKYVHV
     - AAAN233HV
+aov_google_sheet:
+    15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0
 ####################
 # Parameters
 ####################
@@ -62,6 +64,12 @@ n_states:
 bin_length:
     - 5000
     - 20000
+hmm_covariance:
+    - 0.5
+    - 0.7
+    - 0.8
+    - 0.9
+    - 1
 ####################
 # Containers
 ####################
@@ -81,6 +89,10 @@ hmmlearn:
 # Instructions on building container in config/init.sh
 R:
     /hps/nobackup/birney/users/ian/containers/pilot_paper/R_4.1.2.sif
+# Use this for KaryoploteR
+R_4.1.3:
+    /hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.1.3.sif
+# Use this for everything else
 R_4.2.0:
     /hps/nobackup/birney/users/ian/containers/MIKK_HMM/R_4.2.0.sif
 hmmlearn:
