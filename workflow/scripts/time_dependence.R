@@ -16,7 +16,7 @@ library(googlesheets4)
 
 ## Debug
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/0.05/dist_angle/15/F0.csv"
-LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 SHEET_ID = "15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0"
 N_STATES = 15
 POLAR_ALL_DGE_SIG_OF = here::here("book/figs/state_freq_F0/0.05/dist_angle/15/polar_dge_sig_of.png")

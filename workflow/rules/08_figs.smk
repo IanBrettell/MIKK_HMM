@@ -3,8 +3,8 @@ rule karyoplots:
         data = rules.true_hmmlearn.output.csv,
         line_cols = rules.get_line_ranks_and_colours.output.csv
     output:
-        karyoplot_no_missing = "book/plots/hdrr/hmmlearn_true/{bin_length}/{cov}/karyoplot_no_missing.png",
-        karyoplot_with_missing = "book/plots/hdrr/hmmlearn_true/{bin_length}/{cov}/karyoplot_wi_missing.png",
+        karyoplot_no_missing = "book/figs/hmmlearn_true/{bin_length}/{cov}/karyoplot_no_missing.png",
+        karyoplot_with_missing = "book/figs/hmmlearn_true/{bin_length}/{cov}/karyoplot_wi_missing.png",
     log:
         os.path.join(
             config["workdir"],

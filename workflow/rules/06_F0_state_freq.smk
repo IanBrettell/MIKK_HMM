@@ -26,8 +26,10 @@ rule time_dependence_F0:
         data = rules.split_datasets.output.F0,
         line_cols = rules.get_line_ranks_and_colours.output.csv
     output:
-        dge = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_dge.png",
-        sge = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_sge.png",
+        dge_all = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_dge.png",
+        sge_all = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_sge.png",
+        dge_select = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_dge.png",
+        sge_select = "book/figs/time_dependence_F0/{variables}/{interval}_{n_states}_time_dependence_sge.png",
     log:
         os.path.join(
             config["workdir"],
@@ -35,6 +37,7 @@ rule time_dependence_F0:
         ),
     params:
         n_states = "{n_states}",
+        F2_cross_lines = lambda w: config["F2_cross_lines"]
     resources:
         mem_mb = 10000
     container:

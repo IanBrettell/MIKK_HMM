@@ -54,7 +54,7 @@ rule make_hmm_input:
     input:
         expand(rules.make_dp_AB_F2.output,
             zip,
-            sample = SAMPLES_ZIP,
+            sample = SAMPLES_F2_ZIP,
             pat = PAT_ZIP,
             mat = MAT_ZIP
         ),
@@ -77,7 +77,7 @@ rule make_hmm_input:
     script:
         "../scripts/make_hmm_input.R"
 
-# Test HMM with hmmlearn
+# Run HMM to genotype F2
 rule true_hmmlearn:
     input:
         rules.make_hmm_input.output,
@@ -105,3 +105,31 @@ rule true_hmmlearn:
     script:
         "../scripts/true_hmmlearn.py"
 
+# Split genotyped F2 by sample
+rule split_HMM_genotyped_F2:
+    input:
+        rules.true_hmmlearn.output.csv,
+    output:
+        expand(os.path.join(
+            config["workdir"],
+            "hmm_out/F2/hdrr/hmmlearn_split/{{bin_length}}/{{cov}}/{sample}.csv"
+            ),
+                sample = SAMPLES_F2_ZIP
+        )
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/split_HMM_genotyped_F2/hdrr/{bin_length}/{cov}/{sample}.log"
+        ),
+    params:
+        sample = "{sample}"
+    resources:
+        mem_mb = 50000
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/split_HMM_genotyped_F2.R"
+
+
+# Take HMM genotypes for F2 and map them back to 
+rule map_F2_to_F0_genos:

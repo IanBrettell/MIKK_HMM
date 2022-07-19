@@ -89,7 +89,7 @@ rule all:
 ######################
         expand(rules.bam_readcount_F2.output,
                 zip,
-                sample = SAMPLES_ZIP,
+                sample = SAMPLES_F2_ZIP,
                 pat = PAT_ZIP,
                 mat = MAT_ZIP
         ),

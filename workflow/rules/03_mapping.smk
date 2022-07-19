@@ -28,7 +28,7 @@ SAMPLES = pd.read_csv("config/seq_sample_file_AAAMKYVHV.txt",
 
 # Get list of F2 samples and pat and mat lines (to zip)
 df_f2 = pd.read_csv(config["F2_samples_file"])
-SAMPLES_ZIP = df_f2['finclip_id']
+SAMPLES_F2_ZIP = df_f2['finclip_id']
 PAT_ZIP = df_f2['pat_line'].tolist()
 MAT_ZIP = df_f2['mat_line'].tolist()
 
