@@ -108,21 +108,22 @@ rule true_hmmlearn:
 # Split genotyped F2 by sample
 rule split_HMM_genotyped_F2:
     input:
-        rules.true_hmmlearn.output.csv,
+        hmm = rules.true_hmmlearn.output.csv,
     output:
         expand(os.path.join(
             config["workdir"],
-            "hmm_out/F2/hdrr/hmmlearn_split/{{bin_length}}/{{cov}}/{sample}.csv"
+            "hmm_out/F2/hdrr/hmmlearn_split/{{bin_length}}/{{cov}}/{sample}_{pat}_{mat}.csv"
             ),
-                sample = SAMPLES_F2_ZIP
+                zip,
+                sample = SAMPLES_F2_ZIP,
+                pat = PAT_ZIP,
+                mat = MAT_ZIP
         )
     log:
         os.path.join(
             config["workdir"],
-            "logs/split_HMM_genotyped_F2/hdrr/{bin_length}/{cov}/{sample}.log"
+            "logs/split_HMM_genotyped_F2/hdrr/{bin_length}/{cov}.log"
         ),
-    params:
-        sample = "{sample}"
     resources:
         mem_mb = 50000
     container:
@@ -132,4 +133,28 @@ rule split_HMM_genotyped_F2:
 
 
 # Take HMM genotypes for F2 and map them back to 
-rule map_F2_to_F0_genos:
+rule impute_F2_genos:
+    input:
+        F2 = os.path.join(
+            config["workdir"],
+            "hmm_out/F2/hdrr/hmmlearn_split/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
+            ),
+        F0 = rules.extract_homo_div_snps.output,
+    output:
+        os.path.join(
+            config["workdir"],
+            "F2_with_genos/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/impute_F2_genos/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.log"
+        ),
+    params:
+        bin_length = "{bin_length}"
+    resources:
+        mem_mb = 10000
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/impute_F2_genos.R"    

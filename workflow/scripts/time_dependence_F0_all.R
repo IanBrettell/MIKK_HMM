@@ -19,12 +19,6 @@ IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/0.05/dist_angle/15/F
 LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 SHEET_ID = "15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0"
 N_STATES = 15
-POLAR_ALL_DGE_SIG_OF = here::here("book/figs/state_freq_F0/0.05/dist_angle/15/polar_dge_sig_of.png")
-POLAR_ALL_DGE_SIG_NO = here::here("book/figs/state_freq_F0/0.05/dist_angle/15/polar_dge_sig_no.png")
-POLAR_ALL_SGE_SIG_OF = here::here("book/figs/state_freq_F0/0.05/dist_angle/15/polar_sge_sig_of.png")
-POLAR_ALL_SGE_SIG_NO = here::here("book/figs/state_freq_F0/0.05/dist_angle/15/polar_sge_sig_no.png")
-OUT_DGE = here::here("book/figs/time_dependence/dist_angle/0.08_14_dge.png")
-OUT_SGE = here::here("book/figs/time_dependence/dist_angle/0.08_14_sge.png")
 
 # Deauthorise google sheets so that it doesn't ask for prompt
 googlesheets4::gs4_deauth()
@@ -32,14 +26,13 @@ googlesheets4::gs4_deauth()
 ## True
 IN = snakemake@input[["data"]]
 LINE_COLS = snakemake@input[["line_cols"]]
-OUT_DGE = snakemake@output[["dge"]]
-OUT_SGE = snakemake@output[["sge"]]
 N_STATES = snakemake@params[["n_states"]] %>% 
   as.numeric()
-POLAR_ALL_DGE_SIG_OF = snakemake@input[["polar_all_dge_sig_of"]]
-POLAR_ALL_DGE_SIG_NO = snakemake@input[["polar_all_dge_sig_no"]]
-POLAR_ALL_SGE_SIG_OF = snakemake@input[["polar_all_sge_sig_of"]]
-POLAR_ALL_SGE_SIG_NO = snakemake@input[["polar_all_sge_sig_no"]]
+SHEET_ID = snakemake@params[["sheet_id"]]
+TILE_DGE = snakemake@output[["tile_dge"]]
+TILE_SGE = snakemake@output[["tile_sge"]]
+DENS_DGE = snakemake@output[["dens_dge"]]
+DENS_SGE = snakemake@output[["dens_sge"]]
 
 #######################
 # Read in data
@@ -92,10 +85,11 @@ df = raw %>%
   dplyr::mutate(line = dplyr::case_when(fish == "ref" ~ ref_fish,
                                         fish == "test" ~ test_fish)) %>% 
   # recode outbred
-  dplyr::mutate(line = dplyr::if_else(stringr::str_detect(line,
-                                                          "outbred"),
-                                      "outbred",
-                                      line)) %>% 
+  dplyr::mutate(dplyr::across(c("line", "test_fish"),
+                              ~dplyr::if_else(stringr::str_detect(.x,
+                                                                  "outbred"),
+                                              "outbred",
+                                              .x))) %>% 
   # factorise to order `line` and `test_fish`
   dplyr::mutate(line = factor(line, levels = line_cols$line),
                 test_fish = factor(test_fish, levels = line_cols$line))
@@ -165,6 +159,7 @@ dge_tile_of = dge_tile_df %>%
   cowplot::theme_cowplot(font_size = 12) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank()) 
@@ -183,9 +178,27 @@ dge_tile_no = dge_tile_df %>%
   cowplot::theme_cowplot(font_size = 12) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank()) 
+
+# Combine 
+
+dge_tiles_final = cowplot::plot_grid(dge_tile_of,
+                                     dge_tile_no,
+                                     align = "hv",
+                                     labels = c("A", "B"))
+
+# Save 
+
+ggsave(TILE_DGE,
+       dge_tiles_final,
+       device = "png",
+       width = 13,
+       height = 22,
+       units = "in",
+       dpi = 400)
 
 #######################
 # Medarkov matrices: SGE
@@ -226,6 +239,7 @@ sge_tile_of = sge_tile_df %>%
   cowplot::theme_cowplot(font_size = 12) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank()) 
@@ -244,9 +258,27 @@ sge_tile_no = sge_tile_df %>%
   cowplot::theme_cowplot(font_size = 12) +
   theme(strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
         axis.text.y = element_blank(),
         axis.ticks.y = element_blank(),
         axis.line.y = element_blank()) 
+
+# Combine 
+
+sge_tiles_final = cowplot::plot_grid(sge_tile_of,
+                                     sge_tile_no,
+                                     align = "hv",
+                                     labels = c("A", "B"))
+
+# Save 
+
+ggsave(TILE_SGE,
+       sge_tiles_final,
+       device = "png",
+       width = 13,
+       height = 22,
+       units = "in",
+       dpi = 400)
 
 ##########################
 # Time density - DGE
@@ -274,16 +306,21 @@ time_dens_dge_of = df %>%
                 state_plot_recode = factor(state_plot_recode, levels = c(as.character(SIGS_DGE_OF), "other"))) %>% 
   ggplot() +
   geom_density(aes(seconds, after_stat(count), fill = state_plot_recode),
+               size = 0.25,
                position = "fill") +
   facet_grid(rows = vars(line),
              cols = vars(assay)) + 
   scale_fill_manual(values = pal_dge_of) +
-  cowplot::theme_cowplot(font_size = 12) +
+  cowplot::theme_cowplot(font_size = 12,
+                         rel_small = 10/14) +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
+        ) +
   guides(fill = "none") +
+  ylab("frequency") +
   scale_x_continuous(breaks = c(0,200,400,600)) +
-  scale_y_continuous(breaks = c(0,0.5,1))
+  scale_y_continuous(breaks = c(0,1))
 
 ASSAY = "novel object"
 time_dens_dge_no = df %>% 
@@ -297,17 +334,38 @@ time_dens_dge_no = df %>%
                                                      TRUE ~ "other"),
                 state_plot_recode = factor(state_plot_recode, levels = c(as.character(SIGS_DGE_NO), "other"))) %>% 
   ggplot() +
-  geom_density(aes(seconds, after_stat(count), fill = state_plot_recode),
+  geom_density(aes(seconds, after_stat(count),fill = state_plot_recode),
+               size = 0.25,
                position = "fill") +
   facet_grid(rows = vars(line),
              cols = vars(assay)) + 
   scale_fill_manual(values = pal_dge_no) +
-  cowplot::theme_cowplot(font_size = 12) +
+  cowplot::theme_cowplot(font_size = 12,
+                         rel_small = 10/14) +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0)) +
   guides(fill = "none") +
+  ylab("frequency") +
   scale_x_continuous(breaks = c(0,200,400,600)) +
-  scale_y_continuous(breaks = c(0,0.5,1))
+  scale_y_continuous(breaks = c(0,1))
+
+# Combine 
+
+dge_dens_final = cowplot::plot_grid(time_dens_dge_of,
+                                    time_dens_dge_no,
+                                    align = "hv",
+                                    labels = c("A", "B"))
+
+# Save 
+
+ggsave(DENS_DGE,
+       dge_dens_final,
+       device = "png",
+       width = 13,
+       height = 22,
+       units = "in",
+       dpi = 400)
 
 
 ##########################
@@ -337,16 +395,21 @@ time_dens_sge_of = df %>%
                 state_plot_recode = factor(state_plot_recode, levels = c(as.character(SIGS_SGE_OF), "other"))) %>% 
   ggplot() +
   geom_density(aes(seconds, after_stat(count), fill = state_plot_recode),
+               size = 0.25,
                position = "fill") +
   facet_grid(rows = vars(test_fish),
              cols = vars(assay)) + 
   scale_fill_manual(values = pal_sge_of) +
-  cowplot::theme_cowplot(font_size = 12) +
+  cowplot::theme_cowplot(font_size = 12,
+                         rel_small = 10/14) +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
+        ) +
+  ylab("frequency") +
   guides(fill = "none") +
   scale_x_continuous(breaks = c(0,200,400,600)) +
-  scale_y_continuous(breaks = c(0,0.5,1))
+  scale_y_continuous(breaks = c(0,1))
 
 ASSAY = "novel object"
 time_dens_sge_no = df %>% 
@@ -361,249 +424,38 @@ time_dens_sge_no = df %>%
                 state_plot_recode = factor(state_plot_recode, levels = c(as.character(SIGS_SGE_NO), "other"))) %>% 
   ggplot() +
   geom_density(aes(seconds, after_stat(count), fill = state_plot_recode),
+               size = 0.25,
                position = "fill") +
   facet_grid(rows = vars(test_fish),
              cols = vars(assay)) + 
   scale_fill_manual(values = pal_sge_no) +
-  cowplot::theme_cowplot(font_size = 12) +
+  cowplot::theme_cowplot(font_size = 12,
+                         rel_small = 10/14) +
   theme(strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
+        strip.text = element_text(face = "bold"),
+        strip.text.y = element_text(angle = 0),
+        ) +
+  ylab("frequency") +
   guides(fill = "none") +
   scale_x_continuous(breaks = c(0,200,400,600)) +
-  scale_y_continuous(breaks = c(0,0.5,1))
+  scale_y_continuous(breaks = c(0,1))
 
-##########################
-# Spatial density: DGE
-##########################
+# Combine 
 
-# Create density function
+sge_dens_final = cowplot::plot_grid(time_dens_sge_of,
+                                    time_dens_sge_no,
+                                    align = "hv",
+                                    labels = c("A", "B"))
 
-get_density <- function(x, y, ...) {
-  dens <- MASS::kde2d(x, y, ...)
-  ix <- findInterval(x, dens$x)
-  iy <- findInterval(y, dens$y)
-  ii <- cbind(ix, iy)
-  return(dens$z[ii])
-}
+# Save 
 
-
-# OF
-
-sdens_dge_df = df %>% 
-  #dplyr::slice_sample(n = 1e5) %>% 
-  # filter out iCab references when paired with a different line
-  dplyr::filter(fish == "test") %>% 
-  # group by line
-  dplyr::group_by(assay, line) %>% 
-  # get densities
-  dplyr::mutate(density = get_density(x, y, n = 30)) %>% 
-  dplyr::ungroup()
-
-  # Plot
-sdens_dge_of = sdens_dge_df %>% 
-  ## take only states 1:4
-  dplyr::filter(assay == "open field") %>% 
-  ggplot() +
-  geom_point(aes(x, y, colour = density),
-             alpha = 0.1, size = 0.2) +
-  facet_grid(cols = vars(assay), rows = vars(line)) +
-  colorspace::scale_color_continuous_sequential(palette = "Mako", rev = F) +
-  #scale_colour_viridis_c(option = "rocket") +
-  cowplot::theme_cowplot(font_size = 12) +
-  theme(aspect.ratio = 1,
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
-  scale_x_continuous(breaks = c(0,150,300)) +
-  scale_y_continuous(breaks = c(0,150,300)) +
-  xlab("x") +
-  ylab("y")
-
-# NO
-
-sdens_dge_no = sdens_dge_df %>% 
-  dplyr::filter(assay == "novel object") %>% 
-  # Plot
-  ggplot() +
-  geom_point(aes(x, y, colour = density),
-             alpha = 0.1, size = 0.2) +
-  #coord_polar() +
-  facet_grid(cols = vars(assay), rows = vars(line)) +
-  colorspace::scale_color_continuous_sequential(palette = "Mako", rev = F) +
-  #scale_colour_viridis_c(option = "rocket") +
-  cowplot::theme_cowplot(font_size = 12) +
-  theme(aspect.ratio = 1,
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
-  scale_x_continuous(breaks = c(0,150,300)) +
-  scale_y_continuous(breaks = c(0,150,300)) +
-  xlab("x") +
-  ylab("y")
-
-##########################
-# Spatial density: SGE
-##########################
-
-# OF
-
-sdens_sge_df = df %>% 
-  #dplyr::slice_sample(n = 1e5) %>% 
-  # filter out iCab references when paired with a different line
-  dplyr::filter(fish == "ref") %>% 
-  # group by line
-  dplyr::group_by(assay, test_fish) %>% 
-  # get densities
-  dplyr::mutate(density = get_density(x, y, n = 30)) %>% 
-  dplyr::ungroup()
-
-# Plot
-sdens_sge_of = sdens_sge_df %>% 
-  # take only states 1:4
-  dplyr::filter(assay == "open field") %>% 
-  ggplot() +
-  geom_point(aes(x, y, colour = density),
-             alpha = 0.1, size = 0.2) +
-  facet_grid(cols = vars(assay), rows = vars(test_fish)) +
-  #colorspace::scale_color_continuous_sequential(palette = "Mako", rev = F) +
-  scale_colour_viridis_c(option = "rocket") +
-  cowplot::theme_cowplot(font_size = 12) +
-  theme(aspect.ratio = 1,
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
-  scale_x_continuous(breaks = c(0,150,300)) +
-  scale_y_continuous(breaks = c(0,150,300)) +
-  xlab("x") +
-  ylab("y")
-
-# NO
-
-sdens_sge_no = sdens_sge_df %>% 
-  dplyr::filter(assay == "novel object") %>% 
-  # Plot
-  ggplot() +
-  geom_point(aes(x, y, colour = density),
-             alpha = 0.1, size = 0.2) +
-  #coord_polar() +
-  facet_grid(cols = vars(assay), rows = vars(test_fish)) +
-  #colorspace::scale_color_continuous_sequential(palette = "Mako", rev = F) +
-  scale_colour_viridis_c(option = "rocket") +
-  cowplot::theme_cowplot(font_size = 12) +
-  theme(aspect.ratio = 1,
-        strip.background = element_blank(),
-        strip.text = element_text(face = "bold")) +
-  scale_x_continuous(breaks = c(0,150,300)) +
-  scale_y_continuous(breaks = c(0,150,300)) +
-  xlab("x") +
-  ylab("y")
-
-
-############################
-# Combine and save
-############################
-
-final_dge = cowplot::plot_grid(dge_tile_of +
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank(),
-                                       axis.title.y = element_text(vjust=-5)),
-                               time_dens_dge_of,
-                               sdens_dge_of,
-                               dge_tile_no +
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank(),
-                                       axis.title.y = element_text(vjust=-5)),
-                               time_dens_dge_no,
-                               sdens_dge_no,
-                               nrow = 2, ncol = 3,
-                               rel_widths = c(1,1,0.6,1,1,0.6),
-                               align = "hv",
-                               labels = c('A', 'B', 'C', 'D', 'E', 'F'))
-
-####################
-# With polars coloured by significance
-###################
-final_dge_raw = cowplot::plot_grid(dge_tile_of +
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank(),
-                                       axis.title.y = element_text(vjust=-5)),
-                               time_dens_dge_of + 
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank()),
-                               sdens_dge_of,
-                               dge_tile_no +
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank(),
-                                       axis.title.y = element_text(vjust=-5)),
-                               time_dens_dge_no +
-                                 theme(strip.background.y = element_blank(),
-                                       strip.text.y = element_blank()),
-                               sdens_dge_no,
-                               nrow = 2, ncol = 3,
-                               rel_widths = c(1,1,0.6,1,1,0.6),
-                               align = "hv",
-                               labels = c('B', 'C', 'D', 'E', 'F', 'G'))
-
-final_dge_with_polar = ggdraw() +
-  cowplot::draw_image(POLAR_ALL_DGE_SIG_OF,
-                      x = 0, y = 0.8,
-                      width = 1, height = 0.2) +
-  cowplot::draw_plot(final_dge_raw,
-                     x = 0, y = 0.2,
-                     width = 1, height = 0.6) +
-  cowplot::draw_image(POLAR_ALL_DGE_SIG_NO,
-                      x = 0, y = 0,
-                      width = 1, height = 0.2) +
-  cowplot::draw_plot_label(c('A', 'H'),
-                           x = c(0,0), y = c(1, 0.2),
-                           size = 14)
-
-ggsave(OUT_DGE,
-       final_dge_with_polar,
+ggsave(DENS_SGE,
+       sge_dens_final,
        device = "png",
-       width = 11.5,
-       height = 20,
+       width = 13,
+       height = 22,
        units = "in",
        dpi = 400)
 
-final_sge_raw = cowplot::plot_grid(sge_tile_of +
-                                     theme(strip.background.y = element_blank(),
-                                           strip.text.y = element_blank(),
-                                           axis.title.y = element_text(vjust=-5)),
-                                   time_dens_sge_of + 
-                                     theme(strip.background.y = element_blank(),
-                                           strip.text.y = element_blank()),
-                                   sdens_sge_of,
-                                   sge_tile_no +
-                                     theme(strip.background.y = element_blank(),
-                                           strip.text.y = element_blank(),
-                                           axis.title.y = element_text(vjust=-5)),
-                                   time_dens_sge_no +
-                                     theme(strip.background.y = element_blank(),
-                                           strip.text.y = element_blank()),
-                                   sdens_sge_no,
-                                   nrow = 2, ncol = 3,
-                                   rel_widths = c(1,1,0.6,1,1,0.6),
-                                   align = "hv",
-                                   labels = c('B', 'C', 'D', 'E', 'F', 'G'))
-
-final_sge_with_polar = ggdraw() +
-  cowplot::draw_image(POLAR_ALL_SGE_SIG_OF,
-                      x = 0, y = 0.8,
-                      width = 1, height = 0.2) +
-  cowplot::draw_plot(final_sge_raw,
-                     x = 0, y = 0.2,
-                     width = 1, height = 0.6) +
-  cowplot::draw_image(POLAR_ALL_SGE_SIG_NO,
-                      x = 0, y = 0,
-                      width = 1, height = 0.2) +
-  cowplot::draw_plot_label(c('A', 'H'),
-                           x = c(0,0), y = c(1, 0.2),
-                           size = 14)
-
-ggsave(OUT_SGE,
-       final_sge_with_polar,
-       device = "png",
-       width = 11.5,
-       height = 20,
-       units = "in",
-       dpi = 400)
 
 
