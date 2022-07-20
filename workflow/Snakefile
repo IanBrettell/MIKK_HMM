@@ -7,6 +7,7 @@ include: "rules/04_F2_loci.smk"
 include: "rules/05_F2_calling.smk"
 include: "rules/05_KCC_calling.smk"
 include: "rules/06_F0_state_freq.smk"
+include: "rules/07_GCTA.smk"
 include: "rules/08_figs.smk"
 
 ##### Target rules #####
@@ -115,6 +116,10 @@ rule all:
                 sample = SAMPLES_F2_ZIP,
                 pat = PAT_ZIP,
                 mat = MAT_ZIP                   
+        ),
+        expand(rules.create_ped.output,
+                bin_length = 5000,
+                cov = 0.8
         ),
 ######################
 ## 05_KCC_calling.smk

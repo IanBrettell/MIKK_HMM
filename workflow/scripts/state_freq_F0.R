@@ -11,7 +11,7 @@ library(tidyverse)
 # Set variables
 
 ## Debug
-IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/0.05/dist_angle/15/F0.csv"
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
 LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
 N_STATES = 15
 SHEET_ID = "15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0"
@@ -30,6 +30,10 @@ SGE_HIST = snakemake@output[["dge_hist"]]
 googlesheets4::gs4_deauth()
 
 # Read 
+
+## NOTE: we're using the full dataset rather than split (between F0, F2 and KCC) 
+## so that the recoded states are the same across those datasets (as they're
+## sorted by mean speed, which may differ across datasets)
 
 raw = readr::read_csv(IN)
 
@@ -79,6 +83,9 @@ df = df %>%
                 state_recode = factor(state_recode, levels = recode_vec))
 
 
+# FILTER FOR F0
+df = df %>% 
+  dplyr::filter(dataset == "F0")
 
 ## DGE
 

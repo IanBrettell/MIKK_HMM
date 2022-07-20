@@ -1,7 +1,9 @@
 # Calculate state frequencies for F0
+# NOTE: this script includes writing significance tables
+# to a google sheet. Therefore it needs to be run from RStudio
 rule state_freq_F0:
     input:
-        data = rules.split_datasets.output.F0,
+        data = rules.run_hmm.output.F0,
         line_cols = rules.get_line_ranks_and_colours.output.csv
     output:
         dge_hist = "book/figs/state_freq_F0/{variables}/{interval}_{n_states}_state_freq_F0_dge.png",
@@ -40,7 +42,7 @@ rule time_dependence_F0_all:
         n_states = "{n_states}",
         sheet_id = config["aov_google_sheet"]
     resources:
-        mem_mb = 10000
+        mem_mb = 30000
     container:
         config["R_4.2.0"]
     script:

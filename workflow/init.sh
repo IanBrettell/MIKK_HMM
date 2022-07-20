@@ -16,7 +16,6 @@ snakemake \
   --latency-wait 100 \
   --cluster-config config/cluster.yaml \
   --cluster 'bsub -g /snakemake_bgenie -J {cluster.name} -q {cluster.queue} -n {cluster.n} -M {cluster.memory} -o {cluster.outfile}' \
-  --cluster-cancel 'bkill {jobid}' \
   --keep-going \
   --rerun-incomplete \
   --use-conda \

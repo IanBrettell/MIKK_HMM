@@ -1,11 +1,18 @@
 # Calculate state frequencies for F0
 rule state_freq_F2:
     input:
-        data = rules.split_datasets.output.F2,
+        data = rules.run_hmm.output,
         line_cols = rules.get_line_ranks_and_colours.output.csv
     output:
-        dge_hist = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_dge.png",
-        sge_hist = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_sge.png"
+        csv_notrans = os.path.join(
+            config["workdir"],
+            "state_freq_F2/{variables}/{interval}/{n_states}/{dge_sge}_notrans.csv"
+        ),
+        csv_invnorm = os.path.join(
+            config["workdir"],
+            "state_freq_F2/{variables}/{interval}/{n_states}/{dge_sge}_invnorm.csv"
+        ),
+        hist = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_{dge_sge}.png",
     log:
         os.path.join(
             config["workdir"],
@@ -13,7 +20,7 @@ rule state_freq_F2:
         ),
     params:
         n_states = "{n_states}",
-        sheet_id = config["aov_google_sheet"]
+        dge_sge = "{dge_sge}"
     resources:
         mem_mb = 80000
     container:

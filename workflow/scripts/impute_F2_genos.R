@@ -11,8 +11,8 @@ library(tidyverse)
 # Set variables
 
 ## Debug
-F2 = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/F2/hdrr/hmmlearn_split/5000/0.8/1_38-2_21-2.csv"
-F0 = "/hps/nobackup/birney/users/ian/MIKK_HMM/sites_files/F0/homo_divergent/38-2_21-2.txt"
+F2 = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/F2/hdrr/hmmlearn_split/5000/0.8/79_38-2_18-2.csv"
+F0 = "/hps/nobackup/birney/users/ian/MIKK_HMM/sites_files/F0/homo_divergent/38-2_18-2.txt"
 BIN_LENGTH = 5000
 
 ## True

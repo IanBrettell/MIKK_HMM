@@ -131,15 +131,14 @@ rule split_HMM_genotyped_F2:
     script:
         "../scripts/split_HMM_genotyped_F2.R"
 
-
-# Take HMM genotypes for F2 and map them back to 
+# Take HMM genotypes for F2 and map them back to the genotypes of the F0
 rule impute_F2_genos:
     input:
         F2 = os.path.join(
             config["workdir"],
             "hmm_out/F2/hdrr/hmmlearn_split/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
             ),
-        F0 = rules.extract_homo_div_snps.output,
+        F0 = rules.extract_homo_div_snps.output.sites,
     output:
         os.path.join(
             config["workdir"],
@@ -157,4 +156,5 @@ rule impute_F2_genos:
     container:
         config["R_4.2.0"]
     script:
-        "../scripts/impute_F2_genos.R"    
+        "../scripts/impute_F2_genos.R"
+
