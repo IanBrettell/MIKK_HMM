@@ -39,3 +39,8 @@ rule get_line_ranks_and_colours:
     script:
         "../scripts/get_line_ranks_and_colours.R"
 
+######################
+# Parameters
+######################
+
+PERM_SEEDS = list(range(1, config["n_permutations"][0] + 1))

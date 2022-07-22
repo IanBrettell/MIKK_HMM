@@ -12,23 +12,21 @@ library(tidyverse)
 
 ## Debug
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
-LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
-N_STATES = 15
 DGE_SGE = "dge"
 
 ## True
 IN = snakemake@input[["data"]]
-LINE_COLS = snakemake@input[["line_cols"]]
-N_STATES = snakemake@params[["n_states"]]
 OUT_CSV_NT = snakemake@output[["csv_notrans"]]
 OUT_CSV_IV = snakemake@output[["csv_invnorm"]]
 OUT_HIST = snakemake@output[["hist"]]
+DGE_SGE = snakemake@params[["dge_sge"]]
 
+# Get output directories for .csv files
 
-# Deauthorise google sheets so that it doesn't ask for prompt
-googlesheets4::gs4_deauth()
+OUT_DIR_NT = dirname(OUT_CSV_NT[[1]])
+OUT_DIR_IV = dirname(OUT_CSV_IV[[1]])
 
-# Read 
+# Read data
 
 ## NOTE: we're using the full dataset rather than split (between F0, F2 and KCC) 
 ## so that the recoded states are the same across those datasets (as they're
@@ -36,7 +34,13 @@ googlesheets4::gs4_deauth()
 
 raw = readr::read_csv(IN)
 
-line_cols = readr::read_csv(LINE_COLS)
+
+# Add inverse-normalisation function
+invnorm = function(x) {
+  res = rank(x)
+  res = qnorm(res/(length(res)+0.5))
+  return(res)
+}
 
 # Clean
 
@@ -51,13 +55,6 @@ df = raw %>%
   # recode and order `assay` 
   dplyr::mutate(assay = stringr::str_replace(assay, pattern = "_", " "),
                 assay = factor(assay, levels = c("open field", "novel object"))) %>% 
-  # rename outbred
-  dplyr::mutate(line = dplyr::if_else(stringr::str_detect(line,
-                                                          "outbred"),
-                                      "outbred",
-                                      line)) %>% 
-  # order `line` by mean speed
-  dplyr::mutate(line = factor(line, levels = line_cols$line)) %>% 
   # convert `date` to factor
   dplyr::mutate(date = factor(date))
 
@@ -90,17 +87,32 @@ df = df %>%
 ## DGE
 #######################
 
-if (DGE_SGE = "dge"){
+if (DGE_SGE == "dge"){
   # Get proportion of time each fish spent in each state
   df_dge = df %>% 
     # remove iCab 
-    dplyr::filter(test_fish != "iCab") %>% 
-    ## count rows per fish per state
-    dplyr::count(indiv, assay, line, date, time, quadrant, tank_side, state_recode) %>% 
+    dplyr::filter(fish == "test") %>% 
+    ## count rows per fish per state. `.drop` added to include the states with 0 counts
+    dplyr::count(indiv, assay, state_recode, .drop = F) %>% 
     # add total row count per fish
-    dplyr::add_count(indiv, assay, line, date, time, quadrant, tank_side, wt = n, name = "nn") %>% 
+    dplyr::add_count(indiv, assay, wt = n, name = "nn") %>% 
     # get proportion of time fish spent in each state
-    dplyr::mutate(state_freq = n / nn)
+    dplyr::mutate(state_freq = n / nn) %>% 
+    # drop NAs (created by n == 0 and nn == 0, where the fish is not tracked at all)
+    tidyr::drop_na()
+  
+  # Split into states
+  df_list = df_dge %>% 
+    split(., f = .$state_recode)
+  # Write to files
+  counter = 0
+  lapply(df_list, function(DF){
+    counter <<- counter + 1
+    OUT_PATH = file.path(OUT_DIR_NT, paste(names(df_list)[counter],
+                                           ".csv",
+                                           sep = ""))
+    readr::write_csv(DF, OUT_PATH)
+  })
   
   # Split by assay
   
@@ -115,32 +127,39 @@ if (DGE_SGE = "dge"){
     guides(fill = "none")+
     xlab("state frequency")
   
-  
   ### Inverse-normalise
-  
-  # Add function
-  invnorm = function(x) {
-    res = rank(x)
-    res = qnorm(res/(length(res)+0.5))
-    return(res)
-  }
   
   df_dge = df_dge %>% 
     dplyr::group_by(assay, state_recode) %>% 
-    dplyr::mutate(state_freq_invnorm = invnorm(state_freq)) %>% 
+    dplyr::mutate(state_freq = invnorm(state_freq)) %>% 
     dplyr::ungroup() %>% 
-    dplyr::arrange(indiv, assay, line, date, time, quadrant, tank_side, state_recode)
+    dplyr::arrange(indiv, assay, state_recode)
+  
+  # Split by states
+  df_list = df_dge %>% 
+    split(., f = .$state_recode)
+  # Write to files
+  counter = 0
+  lapply(df_list, function(DF){
+    counter <<- counter + 1
+    OUT_PATH = file.path(OUT_DIR_IV, paste(names(df_list)[counter],
+                                           ".csv",
+                                           sep = ""))
+    readr::write_csv(DF, OUT_PATH)
+  })
+  
+  # Plot
   
   dge_hist_posttrans = df_dge %>% 
     ggplot() + 
-    geom_histogram(aes(state_freq_invnorm, fill = state_recode),
+    geom_histogram(aes(state_freq, fill = state_recode),
                    bins = 40) +
     facet_grid(rows = vars(state_recode),
                cols = vars(assay)) +
     cowplot::theme_cowplot() +
     scale_fill_viridis_d() +
     guides(fill = "none") +
-    xlab("state frequency (inverse-normalised per state)")
+    xlab("state frequency (inverse-normalised per state/assay)")
   
   # Compile into single plot
   
@@ -148,7 +167,7 @@ if (DGE_SGE = "dge"){
                                 dge_hist_posttrans,
                                 align = "hv",axis = "tblr")
   
-  ggsave(DGE_HIST,
+  ggsave(OUT_HIST,
          dge_hist,
          device = "png",
          width = 9,
@@ -161,19 +180,32 @@ if (DGE_SGE = "dge"){
 ## SGE
 #######################
 
-if (DGE_SGE = "sge"){
+if (DGE_SGE == "sge"){
   # Get proportion of time each fish spent in each state
   df_sge = df %>% 
-    # take all iCab fishes
-    dplyr::filter(line == "iCab") %>% 
-    ## count rows per fish per state
-    dplyr::count(indiv, assay, test_fish, date, time, quadrant, tank_side, state_recode) %>% 
+    # remove iCab 
+    dplyr::filter(fish == "ref") %>% 
+    ## count rows per fish per state. `.drop` added to include the states with 0 counts
+    dplyr::count(indiv, assay, state_recode, .drop = F) %>% 
     # add total row count per fish
-    dplyr::add_count(indiv, assay, test_fish, date, time, quadrant, tank_side, wt = n, name = "nn") %>% 
+    dplyr::add_count(indiv, assay, wt = n, name = "nn") %>% 
     # get proportion of time fish spent in each state
-    dplyr::mutate(state_freq = n / nn)
+    dplyr::mutate(state_freq = n / nn) %>% 
+    # drop NAs (created by n == 0 and nn == 0, where the fish is not tracked at all)
+    tidyr::drop_na()
   
-  # Split by assay
+  # Split by states
+  df_list = df_sge %>% 
+    split(., f = .$state_recode)
+  # Write to files
+  counter = 0
+  lapply(df_list, function(DF){
+    counter <<- counter + 1
+    OUT_PATH = file.path(OUT_DIR_NT, paste(names(df_list)[counter],
+                                           ".csv",
+                                           sep = ""))
+    readr::write_csv(DF, OUT_PATH)
+  })
   
   sge_hist_pretrans = df_sge %>% 
     ggplot() + 
@@ -187,26 +219,37 @@ if (DGE_SGE = "sge"){
     xlab("state frequency")
   
   
-  
   ### Inverse-normalise
-  
   
   df_sge = df_sge %>% 
     dplyr::group_by(assay, state_recode) %>% 
-    dplyr::mutate(state_freq_invnorm = invnorm(state_freq)) %>% 
+    dplyr::mutate(state_freq = invnorm(state_freq)) %>% 
     dplyr::ungroup() %>% 
-    dplyr::arrange(indiv, assay, test_fish, date, time, quadrant, tank_side, state_recode)
+    dplyr::arrange(indiv, assay, state_recode)
+  
+  # Split by states
+  df_list = df_sge %>% 
+    split(., f = .$state_recode)
+  # Write to files
+  counter = 0
+  lapply(df_list, function(DF){
+    counter <<- counter + 1
+    OUT_PATH = file.path(OUT_DIR_IV, paste(names(df_list)[counter],
+                                           ".csv",
+                                           sep = ""))
+    readr::write_csv(DF, OUT_PATH)
+  })
   
   sge_hist_posttrans = df_sge %>% 
     ggplot() + 
-    geom_histogram(aes(state_freq_invnorm, fill = state_recode),
+    geom_histogram(aes(state_freq, fill = state_recode),
                    bins = 40) +
     facet_grid(rows = vars(state_recode),
                cols = vars(assay)) +
-    theme_bw() +
+    cowplot::theme_cowplot() +
     scale_fill_viridis_d(option = "inferno") +
     guides(fill = "none") +
-    xlab("state frequency (inverse-normalised per state)")
+    xlab("state frequency (inverse-normalised per state/assay)")
   
   # Compile into single plot
   
@@ -214,13 +257,13 @@ if (DGE_SGE = "sge"){
                                 sge_hist_posttrans,
                                 align = "hv",axis = "tblr")
   
-  ggsave(SGE_HIST,
+  ggsave(OUT_HIST,
          sge_hist,
          device = "png",
          width = 9,
          height = 11,
          units = "in",
-         dpi = 400)  
+         dpi = 400)
 }
 
 

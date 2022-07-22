@@ -3,7 +3,7 @@
 # to a google sheet. Therefore it needs to be run from RStudio
 rule state_freq_F0:
     input:
-        data = rules.run_hmm.output.F0,
+        data = rules.run_hmm.output,
         line_cols = rules.get_line_ranks_and_colours.output.csv
     output:
         dge_hist = "book/figs/state_freq_F0/{variables}/{interval}_{n_states}_state_freq_F0_dge.png",

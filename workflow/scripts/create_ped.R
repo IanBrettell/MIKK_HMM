@@ -40,10 +40,23 @@ df = dat_list %>%
 
 ped = df %>% 
   dplyr::mutate(SNP = paste(CHROM, POS, sep = ":")) %>% 
-  dplyr::select(-c(CHROM, POS)) %>% 
+  #dplyr::select(-c(CHROM, POS)) %>% 
   # pivot into 3 column
-  tidyr::pivot_longer(cols = -SNP, names_to = "SAMPLE",values_to = "GT") %>% 
-  tidyr::pivot_wider(id_cols = SAMPLE, names_from = SNP, values_from = GT)
+  tidyr::pivot_longer(cols = -c(SNP, CHROM, POS), 
+                      names_to = "SAMPLE", 
+                      values_to = "GT") %>% 
+  # convert SAMPLE to numeric
+  dplyr::mutate(SAMPLE = as.numeric(SAMPLE)) %>% 
+  # order by SAMPLE, CHROM, and POS
+  dplyr::arrange(SAMPLE, CHROM, POS) %>% 
+  # remove CHROM and POS columns
+  dplyr::select(-c(CHROM, POS)) %>% 
+  # replace NA with 0 as required by Plink https://www.cog-genomics.org/plink/1.9/input#plink_irreg
+  dplyr::mutate(GT = tidyr::replace_na(GT, "00")) %>% 
+  # pivot wide into .ped format (samples to rows, SNPs to columns)
+  tidyr::pivot_wider(id_cols = SAMPLE, 
+                     names_from = SNP, 
+                     values_from = GT)
 
 # Create .map file
 

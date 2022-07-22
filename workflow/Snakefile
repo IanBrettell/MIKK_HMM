@@ -7,6 +7,7 @@ include: "rules/04_F2_loci.smk"
 include: "rules/05_F2_calling.smk"
 include: "rules/05_KCC_calling.smk"
 include: "rules/06_F0_state_freq.smk"
+include: "rules/06_F2_state_freq.smk"
 include: "rules/07_GCTA.smk"
 include: "rules/08_figs.smk"
 
@@ -139,9 +140,39 @@ rule all:
                 n_states = 15        
         ),
 ######################
+## 06_F2_state_freq.smk
+######################
+        expand(rules.state_freq_F2.output,
+                interval = 0.05,
+                variables = "dist_angle",
+                n_states = 15,
+                dge_sge = config["dge_sge"],
+                state = list(range(1,16))
+        ),
+######################
+## 07_GCTA.smk
+######################
+        expand(rules.create_bed.output,
+                bin_length = 5000,
+                cov = 0.8
+        ),
+        expand(rules.create_phen.output,
+                dge_sge = config["dge_sge"][0],
+                transformation = ["notrans", "invnorm"][0],
+                assay = ["open_field", "novel_object"][0],
+                state = list(range(1,16))[0]
+        ),
+        expand(rules.permute_phen.output,
+                dge_sge = config["dge_sge"][0],
+                transformation = ["notrans", "invnorm"][0],
+                assay = ["open_field", "novel_object"][0],
+                state = list(range(1,16))[0],
+                seed = PERM_SEEDS[0]
+        ),
+######################
 ## 08_figs.smk
 ######################
         expand(rules.karyoplots.output,
                 bin_length = config["bin_length"],
                 cov = config["hmm_covariance"]
-        )
+        ),

@@ -73,6 +73,11 @@ hmm_covariance:
 dge_sge:
     - dge
     - sge
+assays:
+    - open_field
+    - novel_object
+n_permutations:
+    - 10
 ####################
 # Containers
 ####################
@@ -114,3 +119,5 @@ gatk:
     docker://quay.io/biocontainers/gatk4:4.2.0.0--0
 tidyverse_4.1.3:
     docker://rocker/tidyverse:4.1.3
+plink1.9:
+    docker://biocontainers/plink1.9:v1.90b6.6-181012-1-deb_cv1
