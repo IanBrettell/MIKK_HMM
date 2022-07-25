@@ -14,7 +14,7 @@ library(tidyverse)
 PED = "/hps/nobackup/birney/users/ian/MIKK_HMM/peds/F2/hdrr/5000/0.8.ped"
 PHENO_FILE = "/hps/nobackup/birney/users/ian/MIKK_HMM/state_freq_F2/dist_angle/0.05/15/dge/invnorm/1.csv"
 SAMPLES_FILE = "config/F2_samples_converted.csv"
-ASSAY = "novel_object" %>% 
+ASSAY = "open_field" %>% 
   stringr::str_replace('_', ' ')
 
 ## True

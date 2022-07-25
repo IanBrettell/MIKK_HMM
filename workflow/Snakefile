@@ -157,17 +157,29 @@ rule all:
                 cov = 0.8
         ),
         expand(rules.create_phen.output,
-                dge_sge = config["dge_sge"][0],
-                transformation = ["notrans", "invnorm"][0],
-                assay = ["open_field", "novel_object"][0],
-                state = list(range(1,16))[0]
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                state = list(range(1,16))
         ),
         expand(rules.permute_phen.output,
-                dge_sge = config["dge_sge"][0],
-                transformation = ["notrans", "invnorm"][0],
-                assay = ["open_field", "novel_object"][0],
-                state = list(range(1,16))[0],
-                seed = PERM_SEEDS[0]
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                state = list(range(1,16)),
+                seed = PERM_SEEDS
+        ),
+        expand(rules.create_covar.output,
+                covars = "All"
+        ),
+        expand(rules.run_mlma_loco.output,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                state = list(range(1,16)),
+                covars = ["None", "All"]
         ),
 ######################
 ## 08_figs.smk
