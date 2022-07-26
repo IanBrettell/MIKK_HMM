@@ -19,8 +19,10 @@ F2_samples_file:
 runs:
     - AAAMKYVHV
     - AAAN233HV
-aov_google_sheet:
+aov_google_sheet_all:
     15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0
+aov_google_sheet_select:
+    118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI
 ####################
 # Parameters
 ####################
@@ -78,6 +80,13 @@ assays:
     - novel_object
 n_permutations:
     - 10
+selected_lines:
+    - 8-2
+    - 18-2
+    - 21-2
+    - 38-2
+    - 40-1
+    - 50-2
 ####################
 # Containers
 ####################

@@ -134,52 +134,84 @@ rule all:
 #                variables = "dist_angle",
 #                n_states = 15
 #        ),
-        expand(rules.time_dependence_F0_all.output,
-                interval = 0.05,
-                variables = "dist_angle",
-                n_states = 15        
-        ),
+#        expand(rules.time_dependence_F0_all.output,
+#                interval = 0.05,
+#                variables = "dist_angle",
+#                n_states = 15        
+#        ),
 ######################
 ## 06_F2_state_freq.smk
 ######################
-        expand(rules.state_freq_F2.output,
-                interval = 0.05,
-                variables = "dist_angle",
-                n_states = 15,
-                dge_sge = config["dge_sge"],
-                state = list(range(1,16))
-        ),
+#        expand(rules.state_freq_F2.output,
+#                interval = 0.05,
+#                variables = "dist_angle",
+#                n_states = 15,
+#                dge_sge = config["dge_sge"],
+#                state = list(range(1,16))
+#        ),
 ######################
 ## 07_GCTA.smk
 ######################
-        expand(rules.create_bed.output,
-                bin_length = 5000,
-                cov = 0.8
-        ),
-        expand(rules.create_phen.output,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16))
-        ),
-        expand(rules.permute_phen.output,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
-                seed = PERM_SEEDS
-        ),
-        expand(rules.create_covar.output,
-                covars = "All"
-        ),
-        expand(rules.run_mlma_loco.output,
+#        expand(rules.create_bed.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
+#        expand(rules.create_phen.output,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16))
+#        ),
+#        expand(rules.permute_phen.output,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.create_covar.output,
+#                covars = "All"
+#        ),
+#        expand(rules.permute_covars.output,
+#                covars = "All",
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.run_mlma_loco.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "All"]
+#        ),
+#        expand(rules.run_mlma_loco_permuted.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "All"],
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.get_min_p_perms.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "All"],
+#        ),
+        expand(rules.get_manhattan_gcta.output,
                 bin_length = 5000,
                 cov = 0.8,
                 dge_sge = config["dge_sge"],
                 transformation = ["notrans", "invnorm"],
                 assay = ["open_field", "novel_object"],
                 state = list(range(1,16)),
-                covars = ["None", "All"]
+                covars = ["None", "All"],
         ),
 ######################
 ## 08_figs.smk

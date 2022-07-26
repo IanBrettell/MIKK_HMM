@@ -12,39 +12,60 @@ library(tidyverse)
 
 ## Debug
 
-#IN = "/hps/nobackup/birney/users/ian/somites/covars/true/Microscope-reporter_pheno.covar"
-#COVARS = "Microscope-reporter_pheno"
-#SEED = 1
+PED = "/hps/nobackup/birney/users/ian/MIKK_HMM/peds/F2/hdrr/5000/0.8.ped"
+IN_CAT = "/hps/nobackup/birney/users/ian/MIKK_HMM/covars/true/All.covar"
+IN_QUANT = "/hps/nobackup/birney/users/ian/MIKK_HMM/covars/true/All.qcovar"
+SEED = 1
 
 ## True
-IN = snakemake@input[[1]]
-COVARS = snakemake@params[["covars"]]
+PED = snakemake@input[["ped"]]
+IN_CAT = snakemake@input[["covar_cat"]]
+IN_QUANT = snakemake@input[["covar_quant"]]
 SEED = snakemake@params[["seed"]] %>% 
   as.numeric()
-OUT = snakemake@output[[1]]
+OUT_CAT = snakemake@output[["cat"]]
+OUT_QUANT = snakemake@output[["quant"]]
 
-# Parse covars
+# Read in files
 
-covs = stringr::str_split(COVARS, "-") %>% 
-  unlist()
+pedp = readr::read_tsv(PED,
+                       col_names = "FID",
+                       col_types = "i",
+                       col_select = 1)
 
-# Read in file
+df_cat = readr::read_tsv(IN_CAT, 
+                         col_names = c("FID", "IID", "DATE", "QUADRANT", "TANK_SIDE"))
 
-df = readr::read_tsv(IN, 
-                     col_names = c("FID", "IID", covs))
+df_quant = readr::read_tsv(IN_QUANT, 
+                          col_names = c("FID", "IID", "TIME"))
 
 # Reorder sample
 
+## Categorical covariates
+
 set.seed(SEED)
-df$FID = sample(df$FID)
+df_cat$FID = sample(df_cat$FID)
 set.seed(SEED)
-df$IID = sample(df$IID)
+df_cat$IID = sample(df_cat$IID)
+
+## Quantitative covariates
+
+set.seed(SEED)
+df_quant$FID = sample(df_quant$FID)
+set.seed(SEED)
+df_quant$IID = sample(df_quant$IID)
 
 # Arrange back to numerical order
 
-out = df %>% 
-  dplyr::arrange(FID)
+out_cat = dplyr::left_join(pedp,
+                           df_cat,
+                           by = "FID")
+
+out_quant = dplyr::left_join(pedp,
+                             df_quant,
+                             by = "FID")
 
 # Save to file
 
-readr::write_tsv(out, OUT, col_names = F)
+readr::write_tsv(out_cat, OUT_CAT, col_names = F)
+readr::write_tsv(out_quant, OUT_QUANT, col_names = F)

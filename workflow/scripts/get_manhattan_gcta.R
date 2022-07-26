@@ -12,14 +12,19 @@ library(tidyverse)
 
 ## Debug
 
-IN = "/hps/nobackup/birney/users/ian/somites/gcta/mlma_loco/true/hdrr/None/5000/0.8/unsegmented_psm_area/Microscope.loco.mlma"
-MIN_P = "/hps/nobackup/birney/users/ian/somites/gcta/mlma_loco/min_p/hdrr/None/5000/0.8/unsegmented_psm_area/Microscope.csv"
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/true/hdrr/5000/0.8/dge/notrans/open_field/1/None.loco.mlma"
+MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/5000/0.8/dge/notrans/open_field/1/None.csv"
 BIN_LENGTH = "5000" %>% 
   as.numeric()
 COV = "0.8" %>% 
   as.numeric()
-PHENO = "unsegmented_psm_area"
-COVARS = "Microscope"
+COVARS = "None"
+STATE = "1" %>% 
+  as.numeric()
+DGE_SGE = "dge" %>% 
+  toupper()
+ASSAY = "open_field"
+TRANS = "notrans"
 
 ## True
 
@@ -29,7 +34,12 @@ BIN_LENGTH = snakemake@params[["bin_length"]] %>%
   as.numeric()
 COV = snakemake@params[["cov"]] %>% 
   as.numeric()
-PHENO = snakemake@params[["phenotype"]]
+DGE_SGE = snakemake@params[["dge_sge"]] %>% 
+  toupper()
+TRANS = snakemake@params[["transformation"]]
+ASSAY = snakemake@params[["assay"]]
+STATE = snakemake@params[["state"]] %>% 
+  as.numeric()
 COVARS =snakemake@params[["covars"]]
 OUT = snakemake@output[["man"]]
 
@@ -37,24 +47,43 @@ OUT = snakemake@output[["man"]]
 # Plotting parameters
 ########################
 
-gwas_pal = c("#2B2D42", "#F7B267", "#F25C54")
+if (DGE_SGE == "DGE"){
+  # get palette
+  col = viridis::viridis(n = 15)
+  # get complementary colours
+  gwas_pal = c("red", col[STATE], colortools::analogous(col[STATE])[2])
+} else if (DGE_SGE == "SGE"){
+  # get palette
+  col = viridis::inferno(n = 15)
+  # get complementary colours
+  gwas_pal = c("red", col[STATE], colortools::analogous(col[STATE])[2])
+  # lighten lower states because they're too dark
+  if (STATE < 3){
+    gwas_pal[3] = karyoploteR::lighter(gwas_pal[3], amount = 70)
+  }
+}
+
+# Set names
 names(gwas_pal) = c("target", "even chr", "odd chr")
 
-# Intercept
-intercept_pal = c("#EF476F", "#8D99AE", "#2b2d42")
-names(intercept_pal) = c("target", "even chr", "odd chr")
+if (TRANS == "notrans"){
+  TRANS = "None"
+} else if (TRANS == "invnorm"){
+  TRANS = "inverse-normalised"
+}
 
-# PSM
-unsegmented_psm_area_pal = c("#E59500", "#9C6FC3", "#401F3E")
-names(unsegmented_psm_area_pal) = c("target", "even chr", "odd chr")
+if (COVARS == "All"){
+  COVARS = "date, time, quadrant, tank side"
+}
+
+ASSAY = stringr::str_replace(ASSAY, "_", " ")
 
 ########################
 # HdrR chromosome data
 ########################
 # Get chromosome lengths
-med_chr_lens = read.table(here::here("data",
-                                     "Oryzias_latipes.ASM223467v1.dna.toplevel.fa_chr_counts.txt"),
-                          col.names = c("chr", "end"))
+med_chr_lens = readr::read_csv(here::here("config/hdrr_chrom_lengths.csv"),
+                               col_names = c("chr", "end"))
 # Add start
 med_chr_lens$start = 1
 # Reorder
@@ -76,14 +105,12 @@ med_chr_lens = med_chr_lens %>%
 
 # Read in and process data
 
-df = readr::read_tsv(IN) %>% 
-  # Add POS
-  dplyr::mutate(BIN_START = (bp * BIN_LENGTH) + 1,
-                BIN_END = (bp + 1) * BIN_LENGTH) %>% 
+df = readr::read_tsv(IN,
+                     col_types = c("iciccdddd")) %>% 
   # join chromosome lengths
   dplyr::left_join(med_chr_lens, by = c("Chr" = "chr")) %>% 
   # add x-coord
-  dplyr::mutate(X_COORD = BIN_START + TOT) %>% 
+  dplyr::mutate(X_COORD = bp + TOT) %>% 
   # change column names
   dplyr::rename(CHROM = Chr)
 
@@ -99,26 +126,23 @@ PERM_SIG = readr::read_csv(MIN_P) %>%
 
 BONF_SIG = 0.05 / nrow(df)
 
-# Parse covariates
-
-covars = stringr::str_split(COVARS, "-") %>% 
-  unlist()
-
 # Set title
 
-TITLE = paste("Phenotype: ",
-              PHENO,
-              "\nCovariates: ",
-              paste(covars, collapse = ", "))
+TITLE = paste(DGE_SGE,
+              "\nAssay: ",
+              ASSAY,
+              "\nState: ",
+              STATE
+              )
 
-SUBTITLE = paste("Emission covariances: ",
+SUBTITLE = paste("Transformation: ",
+                 TRANS,
+                 "\nCovariates: ",
+                 COVARS,
+                 "\nEmission covariances: ",
                  COV,
                  "\nBin length: ",
                  BIN_LENGTH)
-
-# Set palette
-
-pal = eval(as.name(paste(PHENO, "_pal", sep = "")))
 
 ########################
 # Manhattan plot function
@@ -135,16 +159,22 @@ plot_man = function(df, title = NULL, subtitle = NULL, gwas_pal, size = 0.5, alp
                                             gtools::even(CHROM) ~ gwas_pal[2],
                                             gtools::odd(CHROM) ~ gwas_pal[3])) %>% 
     dplyr::mutate(CHROM = factor(CHROM, levels = med_chr_lens$chr)) 
+#  %>% 
+#    dplyr::slice_sample(n = 1e5)
   
   out_plot = df %>% 
     ggplot(aes(x = X_COORD,
                y = -log10(p),
-               label = BIN_START,
-               label2 = BIN_END)) + 
+               label = bp)) + 
     geom_point(colour = df$COLOUR,
                size = size,
                alpha = alpha) +
-    #scale_color_manual(values = gwas_pal) +
+    # permutations significance level
+    geom_hline(yintercept = -log10(perm_sig), colour = "#60D394", linetype = "dashed") +
+    geom_text(aes(MID_TOT[1], -log10(perm_sig), label = "permutations", vjust = 1), size = 3, colour = "#60D394") + 
+    # bonferroni significance level
+    geom_hline(yintercept = -log10(bonf_sig), colour = "#F06449", linetype = "dashed") +
+    geom_text(aes(MID_TOT[1], -log10(bonf_sig), label = "bonferroni", vjust = 1), size = 3, colour = "#F06449") +
     scale_x_continuous(breaks = med_chr_lens$MID_TOT, 
                        labels = med_chr_lens$chr) +
     theme_bw() +
@@ -155,13 +185,8 @@ plot_man = function(df, title = NULL, subtitle = NULL, gwas_pal, size = 0.5, alp
     labs(title = title,
          subtitle = subtitle) +
     xlab("Chromosome") +
-    ylab("-log10(p-value)") + 
-    # permutations significance level
-    geom_hline(yintercept = -log10(perm_sig), colour = "#60D394", linetype = "dashed") +
-    geom_text(aes(MID_TOT[1], -log10(perm_sig), label = "permutations", vjust = 1), size = 3, colour = "#60D394") + 
-    # bonferroni significance level
-    geom_hline(yintercept = -log10(bonf_sig), colour = "#F06449", linetype = "dashed") +
-    geom_text(aes(MID_TOT[1], -log10(bonf_sig), label = "bonferroni", vjust = 1), size = 3, colour = "#F06449")
+    ylab("-log10(p-value)")
+
   
   return(out_plot)
   
@@ -175,7 +200,7 @@ plot_man = function(df, title = NULL, subtitle = NULL, gwas_pal, size = 0.5, alp
 out_plot = plot_man(df,
                     title = TITLE,
                     subtitle = SUBTITLE,
-                    gwas_pal = pal,
+                    gwas_pal = gwas_pal,
                     med_chr_lens = med_chr_lens,
                     perm_sig = PERM_SIG,
                     bonf_sig = BONF_SIG)

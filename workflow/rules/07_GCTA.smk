@@ -155,19 +155,60 @@ rule create_covar:
     params:
         covars = "{covars}"
     resources:
-        mem_mb = 10000,
+        mem_mb = 15000,
     container:
         # requires tidyr >= v1.2
         config["tidyverse_4.1.3"]
     script:
         "../scripts/create_covar.R"
 
+rule permute_covars:
+    input:
+        ped = expand(rules.create_ped.output.ped,
+            bin_length = 5000,
+            cov = 0.8
+        ),
+        covar_cat = os.path.join(
+            config["workdir"],
+            "covars/true/All.covar"
+        ),
+        covar_quant = os.path.join(
+            config["workdir"],
+            "covars/true/All.qcovar"
+        ),
+    output:
+        cat = os.path.join(
+            config["workdir"],
+            "covars/permuted/{covars}/{seed}.covar"
+        ),
+        quant = os.path.join(
+            config["workdir"],
+            "covars/permuted/{covars}/{seed}.qcovar"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/permute_covar/{covars}/{seed}.log"
+        ),
+    params:
+        covars = "{covars}",
+        seed = "{seed}"
+    resources:
+        mem_mb = 15000,
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/permute_covars.R"
+
 def set_covars(wildcards):
     if wildcards.covars == "None":
         out = ""
     else:
-        covars_file = os.path.join(config["workdir"], "covars/true/" + wildcards.covars + ".covar")
-        out = '--covar ' + covars_file
+        covars_file_cat = os.path.join(
+            config["workdir"], "covars/true/" + wildcards.covars + ".covar")
+        covars_file_quant = os.path.join(
+            config["workdir"], "covars/true/" + wildcards.covars + ".qcovar")
+        out = '--covar ' + covars_file_cat + ' --qcovar ' + covars_file_quant
     return(out)
 
 rule run_mlma_loco:
@@ -211,8 +252,15 @@ def set_covars_permuted(wildcards):
     if wildcards.covars == "None":
         out = ""
     else:
-        covars_file = os.path.join(config["workdir"], "covars/permuted/" + wildcards.covars + "/" + wildcards.seed + ".covar")
-        out = '--covar ' + covars_file
+        covars_file_cat = os.path.join(
+            config["workdir"], 
+            "covars/permuted/" + wildcards.covars + "/" + wildcards.seed + ".covar"
+            )
+        covars_file_quant = os.path.join(
+            config["workdir"], 
+            "covars/permuted/" + wildcards.covars + "/" + wildcards.seed + ".qcovar"
+            )
+        out = '--covar ' + covars_file_cat + ' --qcovar ' + covars_file_quant
     return(out)
 
 rule run_mlma_loco_permuted:
@@ -270,9 +318,9 @@ rule get_min_p_perms:
             "logs/get_min_p_perms/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
         ),
     resources:
-        mem_mb = 1000
+        mem_mb = 8000
     container:
-        config["tidyverse_4.1.3"]
+        config["R_4.2.0"]
     script:
         "../scripts/get_min_p_perms.R"
 
@@ -281,11 +329,11 @@ rule get_manhattan_gcta:
         res = rules.run_mlma_loco.output,
         min_p = rules.get_min_p_perms.output,
     output:
-        man = "book/plots/gcta/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.png"
+        man = "book/figs/gcta/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.png"
     log:
         os.path.join(
             config["workdir"],
-            "logs/get_manhattan_gcta/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
+            "logs/get_manhattan_gcta/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.log"
         ),    
     params:
         bin_length = "{bin_length}",
@@ -296,7 +344,7 @@ rule get_manhattan_gcta:
         state = "{state}",
         covars = "{covars}"
     resources:
-        mem_mb = 1000
+        mem_mb = 6000
     container:
         config["R_4.1.3"]
     script:

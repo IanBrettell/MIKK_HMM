@@ -12,8 +12,8 @@ library(tidyverse)
 
 ## Debug
 
-#IN = list("/hps/nobackup/birney/users/ian/somites/gcta/mlma_loco/permuted/hdrr/None/5000/1/intercept/None/1.loco.mlma",
-#          "/hps/nobackup/birney/users/ian/somites/gcta/mlma_loco/permuted/hdrr/None/5000/1/intercept/None/2.loco.mlma")
+IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/permuted/hdrr/5000/0.8/dge/notrans/novel_object/1/All/1.loco.mlma",
+          "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/permuted/hdrr/5000/0.8/dge/notrans/novel_object/1/All/2.loco.mlma")
 
 ## True
 
@@ -27,9 +27,12 @@ names(IN) = IN %>%
   basename(.) %>% 
   stringr::str_remove(".loco.mlma")
 
-df = purrr::map_dfr(IN, readr::read_tsv, .id = "SEED") %>% 
+df = purrr::map_dfr(IN, function(FILE) {
+  readr::read_tsv(FILE,
+                  col_types = c("iciccdddd"))
+  }, .id = "SEED") %>% 
   dplyr::group_by(SEED) %>% 
-  dplyr::summarise(MIN_P = min(p))
+  dplyr::summarise(MIN_P = min(p, na.rm = T))
 
 # Write to file
 
