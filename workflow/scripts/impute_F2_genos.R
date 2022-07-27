@@ -20,7 +20,8 @@ F2 = snakemake@input[["F2"]]
 F0 = snakemake@input[["F0"]]
 BIN_LENGTH = snakemake@params[["bin_length"]] %>% 
   as.numeric()
-OUT = snakemake@output[[1]]
+OUT_NT = snakemake@output[["nt"]]
+OUT_AB = snakemake@output[["ab"]]
 
 # Read in data
 
@@ -43,11 +44,17 @@ f0 = readr::read_tsv(F0,
                                         REF,
                                         ALT))
 
-# Join `f0` and `f2`
+# Join `f0` and `f2` and fill missing genotypes
 
 final = dplyr::left_join(f0,
                          f2,
                          by = c("CHROM", "BIN")) %>% 
+  # group by CHROM
+  dplyr::group_by(CHROM) %>% 
+  # fill missing states
+  tidyr::fill(c(PAT_LINE, MAT_LINE, STATE),
+              .direction = "downup") %>%
+  dplyr::ungroup() %>% 
   # add SNP ID 
   dplyr::mutate(SNP = paste(CHROM, POS, sep = ":")) %>% 
   # get genotypes
@@ -57,9 +64,6 @@ final = dplyr::left_join(f0,
                 GENO_AB = dplyr::case_when(GENO_NT == paste(REF, REF, sep = "") ~ "AA",
                                            GENO_NT == paste(REF, ALT, sep = "") ~ "AB",
                                            GENO_NT == paste(ALT, ALT, sep = "") ~ "BB")) %>% 
-  # fill missing genotypes
-  tidyr::fill(c(GENO_NT, GENO_AB, SAMPLE, PAT_LINE, MAT_LINE, STATE),
-              .direction = "updown") %>% 
   # select key columns
   dplyr::select(SNP, CHROM, POS, REF, ALT, SAMPLE, PAT_LINE, PAT_AL, MAT_LINE, MAT_AL, STATE, GENO_NT, GENO_AB_REF_ALT = GENO_AB) %>% 
   # order by CHROM, POS
@@ -70,6 +74,12 @@ final = dplyr::left_join(f0,
 out = final %>% 
   dplyr::select(SAMPLE, CHROM, POS, GENO_NT) 
 
-# Save .ped and .map
+# Write to file
 
-readr::write_csv(out, OUT)
+readr::write_csv(out, OUT_NT)
+
+# Write AB as well
+
+final %>% 
+  dplyr::select(SAMPLE, CHROM, POS, REF, ALT, PAT_LINE, MAT_LINE, PAT_AL, MAT_AL, GENO_AB_REF_ALT) %>% 
+  readr::write_csv(OUT_AB)

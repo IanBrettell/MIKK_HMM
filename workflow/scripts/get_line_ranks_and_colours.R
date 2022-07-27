@@ -14,11 +14,15 @@ library(cowplot)
 ## Debug
 IN = "/hps/nobackup/birney/users/ian/MIKK_F0_tracking/merged/0.08.csv"
 INTERVAL = 0.08
+SELECTED_LINES = list("8-2", "18-2", "21-2", "38-2", "40-1", "50-2") %>% 
+  unlist()
 
 ## True
 IN = snakemake@input[[1]]
 INTERVAL = snakemake@params[["interval"]] %>% 
   as.numeric()
+SELECTED_LINES = snakemake@params[["selected_lines"]] %>% 
+  unlist()
 OUT_FIG = snakemake@output[["fig"]]
 OUT_CSV = snakemake@output[["csv"]]
 
@@ -33,7 +37,7 @@ df = raw %>%
   dplyr::filter(!(fish == "ref" & test_fish != "iCab")) %>% 
   # rename outbred
   dplyr::mutate(test_fish = dplyr::if_else(stringr::str_detect(test_fish, "outbred"),
-                                           "outbred",
+                                           "Kiyosu CC",
                                            test_fish)) %>% 
   # create `indiv` column
   tidyr::unite(date, time, quadrant, fish,
@@ -55,7 +59,7 @@ df_rank = df %>%
 # Get palette for all MIKK lines
 
 ## How many lines excluding iCab, outbred, and luzonensis
-EXCL = c("iCab", "luzonensis", "outbred")
+EXCL = c("iCab", "luzonensis", "Kiyosu CC")
 MIKK_RANK = df_rank %>% 
   dplyr::filter(!test_fish %in% EXCL) %>% 
   dplyr::pull(test_fish)
@@ -65,25 +69,37 @@ names(PAL) = MIKK_RANK
 # Add greys to PAL
 EXTRA = c("#424B4D", "#C8CED0", "#718084")
 names(EXTRA) = EXCL
-PAL = c(EXTRA["iCab"], PAL, EXTRA["outbred"], EXTRA["luzonensis"])
+PAL = c(EXTRA["iCab"], PAL, EXTRA["Kiyosu CC"], EXTRA["luzonensis"])
 
 # Convert `test_fish` to factor to order
 df = df %>% 
   dplyr::mutate(test_fish = factor(test_fish, levels = names(PAL)))
 
+# Add column based on whether it was selected for the F2 cross
+df = df %>% 
+  dplyr::mutate(selected = dplyr::if_else(test_fish %in% SELECTED_LINES,
+                                          "yes",
+                                          "no"))
+
+# create palette
+sel_pal = c("red", "dimgrey")
+names(sel_pal) = c("yes", "no")
+
 # Plot
 
 out_plot = df %>% 
   ggplot(aes(test_fish, mean_speed, fill = test_fish)) + 
-  geom_boxplot() +
+  geom_boxplot(aes(colour = selected)) +
   ggbeeswarm::geom_beeswarm(size = 0.25) +
   scale_fill_manual(values = PAL) +
+  scale_colour_manual(values = sel_pal) + 
   coord_flip() +
   guides(fill = "none") +
   cowplot::theme_cowplot() +
   scale_x_discrete(limits = rev(levels(df$test_fish))) +
   xlab("line") +
-  ylab(paste("mean speed (pixels per", INTERVAL, "seconds)", sep = " "))
+  ylab(paste("mean speed (pixels per", INTERVAL, "seconds)", sep = " ")) +
+  labs(colour='selected\nfor F2 cross')
   
 ggsave(OUT_FIG,
        out_plot,

@@ -13,7 +13,8 @@ library(tidyverse)
 ## Debug
 IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/1_38-2_21-2.csv",
           "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/2_38-2_21-2.csv",
-          "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/99_38-2_40-1.csv")
+          "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/99_38-2_40-1.csv",
+          "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/266_38-2_21-2.csv")
 
 ## True
 IN = snakemake@input
@@ -24,7 +25,10 @@ OUT_MAP = snakemake@output[["map"]]
 dat_list = purrr::map(IN, function(DF){
   df = readr::read_csv(DF)
   # Get sample
-  ID = as.character(df$SAMPLE[1])
+  ID = as.character(df %>% 
+                      dplyr::distinct(SAMPLE) %>% 
+                      dplyr::filter(!is.na(SAMPLE)) %>% 
+                      dplyr::pull(SAMPLE))
   # Remove sample column and rename GENO_NT column
   df = df %>% 
     dplyr::select(-SAMPLE, {{ID}} := GENO_NT)

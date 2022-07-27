@@ -9,7 +9,10 @@ rule haplotype_caller:
     input:
         bam=rules.merge_bams.output,
         bai=rules.samtools_index.output,
-        ref=rules.get_genome.output,
+        ref= os.path.join(
+            config["workdir"],
+            "refs/hdrr.fasta"
+        ),
         ref_index = rules.genome_faidx.output,
         ref_dict = rules.genome_dict.output
     output:
@@ -44,7 +47,10 @@ rule haplotype_caller:
 # Combine all samples into 
 rule combine_calls:
     input:
-        ref=rules.get_genome.output,
+        ref= os.path.join(
+            config["workdir"],
+            "refs/hdrr.fasta"
+        ),
         gvcfs=expand(os.path.join(
                 config["workdir"],
                 "vcfs/KCC/hdrr/gvcfs/{sample}/{{contig}}.g.vcf"),
@@ -79,7 +85,10 @@ rule combine_calls:
 
 rule genotype_variants:
     input:
-        ref=rules.get_genome.output,
+        ref= os.path.join(
+            config["workdir"],
+            "refs/hdrr.fasta"
+        ),
         gvcf=rules.combine_calls.output,
     output:
         os.path.join(

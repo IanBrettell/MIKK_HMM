@@ -21,6 +21,14 @@ SHEET_ID = "118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI"
 N_STATES = 15
 SELECTED_LINES = list("8-2", "18-2", "21-2", "38-2", "40-1", "50-2") %>% 
   unlist()
+POLAR_ALL_DGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_dge_of.png")
+POLAR_ALL_DGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_dge_no.png")
+POLAR_ALL_SGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_sge_of.png")
+POLAR_ALL_SGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_sge_no.png")
+OUT_DGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_dge_of.png")
+OUT_DGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_dge_no.png")
+OUT_SGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_sge_of.png")
+OUT_SGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_sge_no.png")
 
 # Deauthorise google sheets so that it doesn't ask for prompt
 googlesheets4::gs4_deauth()
@@ -33,8 +41,10 @@ SELECTED_LINES = snakemake@input[["selected_lines"]] %>%
 N_STATES = snakemake@params[["n_states"]] %>% 
   as.numeric()
 SHEET_ID = snakemake@params[["sheet_id"]]
-OUT_DGE = snakemake@output[["out_dge"]]
-OUT_SGE = snakemake@output[["out_sge"]]
+OUT_DGE_OF = snakemake@output[["out_dge_of"]]
+OUT_DGE_NO = snakemake@output[["out_dge_no"]]
+OUT_SGE_OF = snakemake@output[["out_sge_of"]]
+OUT_SGE_NO = snakemake@output[["out_sge_no"]]
 
 #######################
 # Read in data
@@ -360,15 +370,6 @@ dge_dens_final = cowplot::plot_grid(time_dens_dge_of,
                                     align = "hv",
                                     labels = c("A", "B"))
 
-# Save 
-
-ggsave(DENS_DGE,
-       dge_dens_final,
-       device = "png",
-       width = 13,
-       height = 22,
-       units = "in",
-       dpi = 400)
 
 
 ##########################
@@ -465,7 +466,9 @@ ggsave(DENS_SGE,
 # Compose final figures
 ##########################
 
+##########
 # DGE
+##########
 
 final_dge = cowplot::plot_grid(dge_tile_of + 
                                  theme(strip.text.y = element_blank()),
@@ -474,12 +477,124 @@ final_dge = cowplot::plot_grid(dge_tile_of +
                                  theme(strip.text.y = element_blank()),
                                time_dens_dge_no,
                                nrow = 2, ncol = 2,
-                               align = "hv",labels = c("A", "B", "C", "D"))
+                               align = "hv",labels = c("B", "C", "D", "E"))
 
-ggsave(OUT_DGE,
-       final_dge,
+## Open field
+
+final_dge_of = cowplot::plot_grid(dge_tile_of + 
+                                    theme(strip.text.y = element_blank()),
+                                  time_dens_dge_of,
+                                  ncol = 2,
+                                  align = "hv", axis = "tblr",
+                                  labels = c("B", "C"),
+                                  label_size = 14)
+
+final_dge_of = cowplot::ggdraw() +
+  cowplot::draw_image(POLAR_ALL_DGE_SIG_OF,
+                      x = 0, y = 0.6,
+                      width = 1, height = 0.4) +
+  cowplot::draw_plot(final_dge_of,
+                     x = 0, y = 0,
+                     width = 1, height = 0.6) +
+  cowplot::draw_plot_label('A',
+                           size = 14)
+
+
+ggsave(OUT_DGE_OF,
+       final_dge_of,
        device = "png",
-       width = 13,
-       height = 22,
+       width = 10,
+       height = 15,
+       units = "in",
+       dpi = 400)
+
+## Novel object
+
+final_dge_no = cowplot::plot_grid(dge_tile_no + 
+                                    theme(strip.text.y = element_blank()),
+                                  time_dens_dge_no,
+                                  ncol = 2,
+                                  align = "hv", axis = "tblr",
+                                  labels = c("B", "C"),
+                                  label_size = 14)
+
+final_dge_no = cowplot::ggdraw() +
+  cowplot::draw_image(POLAR_ALL_DGE_SIG_NO,
+                      x = 0, y = 0.6,
+                      width = 1, height = 0.4) +
+  cowplot::draw_plot(final_dge_no,
+                     x = 0, y = 0,
+                     width = 1, height = 0.6) +
+  cowplot::draw_plot_label('A',
+                           size = 14)
+
+
+ggsave(OUT_DGE_NO,
+       final_dge_no,
+       device = "png",
+       width = 10,
+       height = 15,
+       units = "in",
+       dpi = 400)
+
+##########
+# SGE
+##########
+
+# Open field 
+
+final_sge_of = cowplot::plot_grid(sge_tile_of + 
+                                    theme(strip.text.y = element_blank()),
+                                  time_dens_sge_of,
+                                  ncol = 2,
+                                  align = "hv", axis = "tblr",
+                                  labels = c("B", "C"),
+                                  label_size = 14)
+
+final_sge_of = cowplot::ggdraw() +
+  cowplot::draw_image(POLAR_ALL_SGE_SIG_OF,
+                      x = 0, y = 0.6,
+                      width = 1, height = 0.4) +
+  cowplot::draw_plot(final_sge_of,
+                     x = 0, y = 0,
+                     width = 1, height = 0.6) +
+  cowplot::draw_plot_label('A',
+                           size = 14)
+
+
+ggsave(OUT_SGE_OF,
+       final_sge_of,
+       device = "png",
+       width = 10,
+       height = 15,
+       units = "in",
+       dpi = 400)
+
+# Novel object
+
+final_sge_no = cowplot::plot_grid(sge_tile_no + 
+                                    theme(strip.text.y = element_blank()),
+                                  time_dens_sge_no,
+                                  ncol = 2,
+                                  align = "hv", axis = "tblr",
+                                  labels = c("B", "C"),
+                                  label_size = 14)
+
+final_sge_no = cowplot::ggdraw() +
+  cowplot::draw_image(POLAR_ALL_SGE_SIG_NO,
+                      x = 0, y = 0.6,
+                      width = 1, height = 0.4) +
+  cowplot::draw_plot(final_sge_no,
+                     x = 0, y = 0,
+                     width = 1, height = 0.6) +
+  cowplot::draw_plot_label('A',
+                           size = 14)
+
+
+ggsave(OUT_SGE_NO,
+       final_sge_no,
+       device = "png",
+       width = 10,
+       height = 15,
        units = "in",
        dpi = 400)

@@ -61,7 +61,10 @@ rule bwa_mem2_mem:
     input:
         reads=get_seq_paths,
         idx=rules.bwa_mem2_index.output,
-        ref = rules.get_genome.output,
+        ref = os.path.join(
+            config["workdir"],
+            "refs/hdrr.fasta"
+        ),
     output:
         os.path.join(
             config["workdir"],

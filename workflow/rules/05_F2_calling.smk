@@ -4,7 +4,10 @@ rule bam_readcount_F2:
         bam = rules.merge_bams.output.bam,
         index = rules.samtools_index.output,
         sites_file = rules.extract_homo_div_snps.output.sites,
-        ref = rules.get_genome.output,
+        ref = os.path.join(
+            config["workdir"],
+            "refs/hdrr.fasta"
+        ),
     output:
         os.path.join(
             config["workdir"],
@@ -140,9 +143,13 @@ rule impute_F2_genos:
             ),
         F0 = rules.extract_homo_div_snps.output.sites,
     output:
-        os.path.join(
+        nt = os.path.join(
             config["workdir"],
             "F2_with_genos/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
+        ),
+        ab = os.path.join(
+            config["workdir"],
+            "F2_with_genos_AB/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
         ),
     log:
         os.path.join(
@@ -152,7 +159,7 @@ rule impute_F2_genos:
     params:
         bin_length = "{bin_length}"
     resources:
-        mem_mb = 10000
+        mem_mb = 3000
     container:
         config["R_4.2.0"]
     script:

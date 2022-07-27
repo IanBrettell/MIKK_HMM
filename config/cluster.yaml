@@ -8,3 +8,5 @@ run_kruskal_wallis:
   queue: bigmem
 bwa_mem2_mem:
   n: "{threads}"
+create_ped:
+  queue: bigmem

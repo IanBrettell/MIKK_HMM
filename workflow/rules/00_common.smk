@@ -31,13 +31,32 @@ rule get_line_ranks_and_colours:
             "logs/get_line_ranks_and_colours/all.log"
         ),
     params:
-        interval = 0.08
+        interval = 0.08,
+        selected_lines = config["selected_lines"]
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 20000
     container:
         config["R_4.2.0"]
     script:
         "../scripts/get_line_ranks_and_colours.R"
+
+# Get the sample counts for each cross
+rule count_crosses:
+    input:
+        config["F2_samples_file"]
+    output:
+        "config/F2_cross_counts.csv"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/count_crosses/all.log"
+        ),
+    resources:
+        mem_mb = 1000
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/count_crosses.R"    
 
 ######################
 # Parameters

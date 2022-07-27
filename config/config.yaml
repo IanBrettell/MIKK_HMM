@@ -132,3 +132,5 @@ plink1.9:
     docker://biocontainers/plink1.9:v1.90b6.6-181012-1-deb_cv1
 GCTA:
     docker://quay.io/biocontainers/gcta:1.93.2beta--h9ee0642_1
+ImageMagick_7.1.0.43:
+    docker://dpokidov/imagemagick:7.1.0.43

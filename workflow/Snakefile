@@ -8,7 +8,7 @@ include: "rules/05_F2_calling.smk"
 include: "rules/05_KCC_calling.smk"
 include: "rules/06_F0_state_freq.smk"
 include: "rules/06_F2_state_freq.smk"
-include: "rules/07_GCTA.smk"
+include: "rules/07_GCTA_state_freq.smk"
 include: "rules/08_figs.smk"
 
 ##### Target rules #####
@@ -18,7 +18,7 @@ rule all:
 ######################
 ## 00_common.smk
 ######################
-#        rules.get_line_ranks_and_colours.output,
+        rules.get_line_ranks_and_colours.output,
 ######################
 ## 01_ref.smk
 ######################
@@ -204,19 +204,35 @@ rule all:
 #                state = list(range(1,16)),
 #                covars = ["None", "All"],
 #        ),
-        expand(rules.get_manhattan_gcta.output,
+#        expand(rules.get_manhattan_gcta.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "All"],
+#        ),
+        expand(rules.make_grm.output,
+                bin_length = 5000,
+                cov = 0.8
+        ),
+        expand(rules.make_grm_inbred.output,
+                bin_length = 5000,
+                cov = 0.8
+        ),
+######################
+## 08_figs.smk
+######################
+#        expand(rules.karyoplots.output,
+#                bin_length = config["bin_length"],
+#                cov = config["hmm_covariance"]
+#        ),
+        expand(rules.compile_sig_mans.output,
                 bin_length = 5000,
                 cov = 0.8,
                 dge_sge = config["dge_sge"],
                 transformation = ["notrans", "invnorm"],
                 assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
                 covars = ["None", "All"],
-        ),
-######################
-## 08_figs.smk
-######################
-        expand(rules.karyoplots.output,
-                bin_length = config["bin_length"],
-                cov = config["hmm_covariance"]
         ),
