@@ -141,25 +141,29 @@ rule impute_F2_genos:
             config["workdir"],
             "hmm_out/F2/hdrr/hmmlearn_split/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
             ),
-        F0 = rules.extract_homo_div_snps.output.sites,
+        F0 = rules.extract_parental_snps.output,
     output:
-        nt = os.path.join(
+        nt = expand(os.path.join(
             config["workdir"],
-            "F2_with_genos/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
+            "F2_with_genos_chr/hdrr/{{bin_length}}/{{cov}}/{{sample}}_{{pat}}_{{mat}}/{contig}.csv"
+            ),
+                contig = list(range(1,25))
         ),
-        ab = os.path.join(
+        ab = expand(os.path.join(
             config["workdir"],
-            "F2_with_genos_AB/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.csv"
+            "F2_with_genos_AB_chr/hdrr/{{bin_length}}/{{cov}}/{{sample}}_{{pat}}_{{mat}}/{contig}.csv"
+            ),
+                contig = list(range(1,25))
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/impute_F2_genos/hdrr/{bin_length}/{cov}/{sample}_{pat}_{mat}.log"
+            "logs/impute_F2_genos/hdrr/{bin_length}/{cov}/{sample}/{pat}/{mat}.log"
         ),
     params:
         bin_length = "{bin_length}"
     resources:
-        mem_mb = 3000
+        mem_mb = 20000
     container:
         config["R_4.2.0"]
     script:

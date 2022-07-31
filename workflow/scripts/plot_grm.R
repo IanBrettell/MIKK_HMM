@@ -10,10 +10,33 @@ library(tidyverse)
 
 # Set variables
 
+## Debug
+## Original
 IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms/hdrr/5000/0.8"
+## Inbred
 IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_inbred/hdrr/5000/0.8"
-PED = "/hps/nobackup/birney/users/ian/MIKK_HMM/peds/F2/hdrr/5000/0.8.ped"
+## Original no missing
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_no_miss/hdrr/5000/0.8"
+## Inbred no missing
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_inbred_no_miss/hdrr/5000/0.8"
+## Chr10
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_per_chr/hdrr/5000/0.8/18"
 
+F2_SAMPLES = "/hps/software/users/birney/ian/repos/MIKK_HMM/config/F2_samples_converted.csv"
+
+## True
+IN_PREF = snakemake@params[["grm_pref"]]
+F2_SAMPLES = snakemake@input[["F2_samples"]]
+OUT = snakemake@output[["png"]]
+
+# Read in F2 samples
+
+f2 = readr::read_csv(F2_SAMPLES,
+                     col_types = c("cccc")) %>% 
+  dplyr::select(SAMPLE = finclip_id,
+                PAT = pat_line,
+                MAT = mat_line) %>% 
+  dplyr::mutate(PAT_MAT = paste(PAT, "x", MAT, sep = ""))
 
 # Read in binary files using script provided here: https://yanglab.westlake.edu.cn/software/gcta/#MakingaGRM
 ReadGRMBin=function(prefix, AllN=F, size=4){
@@ -39,6 +62,7 @@ ReadGRMBin=function(prefix, AllN=F, size=4){
 grm = ReadGRMBin(IN_PREF)
 
 # Convert to symmetric matrix
+# Guidance here: https://stackoverflow.com/questions/23040676/how-to-fill-in-a-matrix-given-diagonal-and-off-diagonal-elements-in-r
 m <- matrix(NA, ncol = length(grm$diag), nrow = length(grm$diag))
 m[lower.tri(m)] <- grm$off
 m[upper.tri(m)] <- t(m)[upper.tri(t(m))]
@@ -48,66 +72,57 @@ rownames(m) = grm$id$V1
 colnames(m) = grm$id$V2
 
 # Get order
-ord = hclust( dist(m, method = "euclidean"))$order
+ord = hclust(dist(m, method = "euclidean"), method = "ward.D")$order
+labs = rownames(m)[ord]
+# Get labs with cross
+labs_x = tibble(SAMPLE = labs) %>% 
+  dplyr::left_join(f2 %>% 
+                     dplyr::select(SAMPLE, PAT_MAT),
+                   by = "SAMPLE") %>% 
+  # combine
+  dplyr::mutate(S_X = paste(SAMPLE, PAT_MAT, sep = "_"))
+
+# Order matrix
+m_ord = m[ord, ord]
 
 # Plot
 
-test = m %>% 
+df_fig = m_ord %>% 
   as.data.frame() %>% 
-  tibble::rownames_to_column(var = "f_id") %>% 
-  tidyr::pivot_longer(-c(f_id), names_to = "samples", values_to = "values") %>% 
-  dplyr::mutate(dplyr::across(c("f_id", "samples"),
-                              ~factor(., levels = ord))) %>% 
+  tibble::rownames_to_column(var = "SAMPLE_1") %>% 
+  tidyr::pivot_longer(-c(SAMPLE_1), names_to = "SAMPLE_2", values_to = "VALUE") %>% 
+  # bind with f2
+  dplyr::left_join(f2 %>% 
+                     dplyr::select(SAMPLE_1 = SAMPLE,
+                                   S1_PAR = PAT_MAT),
+                   by = "SAMPLE_1") %>% 
+  dplyr::left_join(f2 %>% 
+                     dplyr::select(SAMPLE_2 = SAMPLE,
+                                   S2_PAR = PAT_MAT),
+                   by = "SAMPLE_2") %>% 
+  dplyr::mutate(S1_X = paste(SAMPLE_1, S1_PAR, sep = "_"),
+                S2_X = paste(SAMPLE_2, S2_PAR, sep = "_")) %>% 
+  dplyr::mutate(dplyr::across(c("S1_X", "S2_X"),
+                              ~factor(., levels = labs_x$S_X)))
+  # create 
+
+## Inspect values
+#df_fig %>% 
+#  dplyr::arrange(desc(VALUE)) %>% 
+#  dplyr::filter(!SAMPLE_1 == SAMPLE_2) %>% 
+#  View()
+
+fig = df_fig %>% 
   ggplot() +
-  geom_tile(aes(x = samples, y = f_id, fill = values)) +
+  geom_tile(aes(x = S1_X, y = S2_X, fill = VALUE)) +
   scale_fill_viridis_c(option = "plasma") +
-  theme(aspect.ratio = 1)
+  theme(aspect.ratio = 1) +
+  theme(axis.text.x = element_text(angle = 90))
 
-######################
-# Compute "manually"
-######################
-
-IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/1_38-2_21-2.csv",
-          "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/2_38-2_21-2.csv",
-          "/hps/nobackup/birney/users/ian/MIKK_HMM/F2_with_genos/hdrr/5000/0.8/99_38-2_40-1.csv")
-
-# Read in files
-dat_list = purrr::map(IN, function(DF){
-  df = readr::read_csv(DF)
-  # Get sample
-  ID = as.character(df$SAMPLE[1])
-  # Remove sample column and rename GENO_NT column
-  df = df %>% 
-    dplyr::select(-SAMPLE, {{ID}} := GENO_NT)
-})
-
-# Join
-
-df = dat_list %>%
-  purrr::reduce(full_join, by=c("CHROM", "POS")) %>% 
-  dplyr::arrange(CHROM, POS)
-
-# Create .ped file
-
-ped = df %>% 
-  dplyr::mutate(SNP = paste(CHROM, POS, sep = ":")) %>% 
-  #dplyr::select(-c(CHROM, POS)) %>% 
-  # pivot into 3 column
-  tidyr::pivot_longer(cols = -c(SNP, CHROM, POS), 
-                      names_to = "SAMPLE", 
-                      values_to = "GT") %>% 
-  # convert SAMPLE to numeric
-  dplyr::mutate(SAMPLE = as.numeric(SAMPLE)) %>% 
-  # order by SAMPLE, CHROM, and POS
-  dplyr::arrange(SAMPLE, CHROM, POS) %>% 
-  # remove CHROM and POS columns
-  dplyr::select(-c(CHROM, POS)) %>% 
-  # replace NA with 0 as required by Plink https://www.cog-genomics.org/plink/1.9/input#plink_irreg
-  dplyr::mutate(GT = tidyr::replace_na(GT, "00")) %>% 
-  # pivot wide into .ped format (samples to rows, SNPs to columns)
-  tidyr::pivot_wider(id_cols = SAMPLE, 
-                     names_from = SNP, 
-                     values_from = GT)
-
-
-
+ggsave(OUT,
+       fig,
+       device = "png",
+       width = 30,
+       height = 30,
+       units = "in",
+       dpi = 400)

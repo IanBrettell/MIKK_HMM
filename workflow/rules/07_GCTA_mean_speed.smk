@@ -8,18 +8,18 @@ rule create_phen_mean_speed:
         ),
         phenos = os.path.join(
             config["workdir"],
-            "state_freq_F2/dist_angle/0.05/15/{dge_sge}/{transformation}/{state}.csv"
+            "mean_speed_F2/{dge_sge}/{transformation}.csv"
             ),
         samples_file = config["F2_samples_file"]
     output:
         os.path.join(
             config["workdir"],
-            "phens_ms/true/{dge_sge}/{transformation}/{assay}/{state}.phen"
+            "phens_ms/true/{dge_sge}/{transformation}/{assay}.phen"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/create_phen_mean_speed/{dge_sge}/{transformation}/{assay}/{state}.log"
+            "logs/create_phen_mean_speed/{dge_sge}/{transformation}/{assay}.log"
         ),
     params:
         assay = "{assay}"        
@@ -29,7 +29,7 @@ rule create_phen_mean_speed:
         # requires tidyr >= v1.2
         config["tidyverse_4.1.3"]
     script:
-        "../scripts/create_phen.R"
+        "../scripts/create_phen_mean_speed.R"
 
 rule permute_phen:
     input:
@@ -37,12 +37,12 @@ rule permute_phen:
     output:
         os.path.join(
             config["workdir"],
-            "phens/permuted/{dge_sge}/{transformation}/{assay}/{state}/{seed}.phen"
+            "phens/permuted/{dge_sge}/{transformation}/{assay}/{seed}.phen"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/permute_phen/{dge_sge}/{transformation}/{assay}/{state}/{seed}.log"
+            "logs/permute_phen/{dge_sge}/{transformation}/{assay}/{seed}.log"
         ),
     params:
         phenotype = "state_freq",
@@ -91,7 +91,7 @@ rule create_covar:
         # requires tidyr >= v1.2
         config["tidyverse_4.1.3"]
     script:
-        "../scripts/create_covar.R"
+        "../scripts/create_covar_mean_speed.R"
 
 rule permute_covars:
     input:
@@ -142,24 +142,27 @@ def set_covars(wildcards):
         out = '--covar ' + covars_file_cat + ' --qcovar ' + covars_file_quant
     return(out)
 
-rule run_mlma_loco:
+rule run_mlma_loco_mean_speed:
     input:
         bed = rules.create_bed.output.bed,
-        phen = rules.create_phen.output,
+        phen = rules.create_phen_mean_speed.output,
+        grm = rules.plink_grm_loco.output,
         #excl_samples = rules.create_excluded_samples_list.output,
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco/true/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.loco.mlma"
+            "gcta/mlma_loco_mean_speed/true/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{covars}/{contig}.loco.mlma"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/run_mlma_loco/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
+            "logs/run_mlma_loco/hdrr/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{covars}/{contig}.log"
         ),
     params:
         in_pref = lambda wildcards, input: input.bed.replace(".bed", ""),
+        grm_pref = lambda wildcards, input: input.grm.replace(".grm.bin", ""),
         out_pref = lambda wildcards, output: output[0].replace(".loco.mlma", ""),
+        contig = "{contig}",
         covars = set_covars,
     resources:
         mem_mb = 5000,
@@ -169,9 +172,11 @@ rule run_mlma_loco:
     shell:
         """
         gcta64 \
-            --mlma-loco \
+            --mlma-no-preadj-covar \
             --bfile {params.in_pref} \
+            --grm {params.grm_pref} \
             --pheno {input.phen} \
+            --chr {params.contig} \
             {params.covars} \
             --out {params.out_pref} \
             --autosome-num 24 \

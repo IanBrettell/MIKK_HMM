@@ -1,5 +1,12 @@
 # Notes
 
+## 29 July 2022
+
+SNP count of .ped with all HOM SNPs: 
+    - 21,294,644
+SNP count of .ped with all HOM SNPs, excluding SNPs with any missing calls:
+    - 21,294,644
+
 ## 18 July 2022
 
 Best combination of HMM parameters is:

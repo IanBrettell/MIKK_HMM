@@ -1,9 +1,3 @@
-# Get contigs (chromosomes 1-24)
-def get_contigs(start = config["contigs"][0], end = config["contigs"][1]):
-    """Get list of chromosomes."""
-    end = end + 1
-    return list(range(start, end))
-
 # Call haplotypes
 rule haplotype_caller:
     input:

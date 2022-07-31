@@ -63,3 +63,10 @@ rule count_crosses:
 ######################
 
 PERM_SEEDS = list(range(1, config["n_permutations"][0] + 1))
+
+# Get contigs (chromosomes 1-24)
+def get_contigs(start = config["contigs"][0], end = config["contigs"][1]):
+    """Get list of chromosomes."""
+    end = end + 1
+    return list(range(start, end))
+CONTIGS = get_contigs()

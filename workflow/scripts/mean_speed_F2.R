@@ -24,11 +24,6 @@ DGE_SGE = snakemake@params[["dge_sge"]]
 
 # Get output directories for .csv files
 
-OUT_DIR_NT_OF = dirname(OUT_CSV_NT[["notrans_of"]])
-OUT_DIR_NT_NO = dirname(OUT_CSV_NT[["notrans_no"]])
-OUT_DIR_IV_OF = dirname(OUT_CSV_IV[["invnorm_of"]])
-OUT_DIR_IV_NO = dirname(OUT_CSV_IV[["invnorm_no"]])
-
 # Read data
 
 raw = readr::read_csv(IN)
@@ -73,7 +68,7 @@ if (DGE_SGE == "dge"){
     dplyr::ungroup()
   
   # Write to file
-  readr::write_csv(df_dge, OUT_PATH)
+  readr::write_csv(df_dge, OUT_CSV_NT)
   
   # Split by assay
   
@@ -99,7 +94,7 @@ if (DGE_SGE == "dge"){
     dplyr::ungroup()
   
   # Write to file
-  readr::write_csv(DF, OUT_PATH)
+  readr::write_csv(df_dge, OUT_CSV_IV)
 
   
   # Plot
@@ -151,7 +146,7 @@ if (DGE_SGE == "sge"){
     dplyr::ungroup()
   
   # Write to file
-  readr::write_csv(DF, OUT_PATH)
+  readr::write_csv(df_sge, OUT_CSV_NT)
 
   
   sge_hist_pretrans = df_sge %>% 
@@ -177,7 +172,7 @@ if (DGE_SGE == "sge"){
     dplyr::ungroup()
   
   # Write to file
-  readr::write_csv(DF, OUT_PATH)
+  readr::write_csv(df_sge, OUT_CSV_IV)
 
   sge_hist_posttrans = df_sge %>% 
     ggplot() + 

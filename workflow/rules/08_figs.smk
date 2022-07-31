@@ -45,26 +45,106 @@ rule compile_sig_mans:
             2> {log}
         """ 
 
+##################
+# GRMs
+##################
+
 rule plot_grm:
     input:
         grm = rules.make_grm.output,
-        grm_inbred = rules.make_grm_inbred.output,
+        F2_samples = config["F2_samples_file"]
     output:
-        grm_png = "book/figs/grm/{bin_length}/{cov}/grm.png",
-        grm_inbred_png = "book/figs/grm/{bin_length}/{cov}/grm_inbred.png",
+        png = "book/figs/grm/{bin_length}/{cov}/grm.png"
     log:
         os.path.join(
             config["workdir"],
             "logs/plot_grm/{bin_length}/{cov}.log"
         ),
     params:
-        grm_pref = lambda wildcards, input: input.grm.replace(".grm.bin", ""),
-        grm_inbred_pref = lambda wildcards, input: input.grm_inbred.replace(".grm.bin", ""),
+        grm_pref = lambda wildcards, input: input.grm[0].replace(".grm.bin", ""),
     resources:
         mem_mb = 5000,
     container:
         config["R_4.2.0"]
     script:
         "../scripts/plot_grm.R"
-    
-        
+
+rule plot_grm_per_chrom:
+    input:
+        grm = rules.make_grm_per_chrom.output,
+        F2_samples = config["F2_samples_file"]
+    output:
+        png = "book/figs/grm_per_chrom/{bin_length}/{cov}/{contig}_grm.png"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/plot_grm_per_chrom/{bin_length}/{cov}/{contig}.log"
+        ),
+    params:
+        grm_pref = lambda wildcards, input: input.grm[0].replace(".grm.bin", ""),
+    resources:
+        mem_mb = 5000,
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_grm.R"
+
+rule plot_grm_inbred_per_chrom:
+    input:
+        grm = rules.make_grm_inbred_per_chrom.output,
+        F2_samples = config["F2_samples_file"]
+    output:
+        png = "book/figs/grm_inbred_per_chrom/{bin_length}/{cov}/{contig}_grm.png"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/plot_grm_inbred_per_chrom/{bin_length}/{cov}/{contig}.log"
+        ),
+    params:
+        grm_pref = lambda wildcards, input: input.grm[0].replace(".grm.bin", ""),
+    resources:
+        mem_mb = 5000,
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_grm.R"
+
+rule plot_grm_no_miss:
+    input:
+        grm = rules.make_grm_no_miss.output,
+        F2_samples = config["F2_samples_file"]
+    output:
+        png = "book/figs/grm_no_miss/{bin_length}/{cov}.png"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/plot_grm_no_miss/{bin_length}/{cov}.log"
+        ),
+    params:
+        grm_pref = lambda wildcards, input: input.grm[0].replace(".grm.bin", ""),
+    resources:
+        mem_mb = 5000,
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_grm.R"
+
+rule plot_grm_inbred_no_miss:
+    input:
+        grm = rules.make_grm_inbred_no_miss.output,
+        F2_samples = config["F2_samples_file"]
+    output:
+        png = "book/figs/grm_inbred_no_miss/{bin_length}/{cov}.png"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/plot_grm_inbred_no_miss/{bin_length}/{cov}.log"
+        ),
+    params:
+        grm_pref = lambda wildcards, input: input.grm[0].replace(".grm.bin", ""),
+    resources:
+        mem_mb = 5000,
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_grm.R"
