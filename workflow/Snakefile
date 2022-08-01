@@ -9,9 +9,9 @@ include: "rules/05_KCC_calling.smk"
 include: "rules/06_F0_state_freq.smk"
 include: "rules/06_F2_state_freq.smk"
 include: "rules/07_plink_format.smk"
-include: "rules/07_GCTA_state_freq.smk"
 include: "rules/08_relationship_metrics.smk"
-include: "rules/08_figs.smk"
+#include: "rules/07_GCTA_state_freq.smk"
+#include: "rules/08_figs.smk"
 
 
 ##### Target rules #####
@@ -183,13 +183,60 @@ rule all:
 #                bin_length = 5000,
 #                cov = 0.8
 #        ),
-        expand(rules.create_bed.output,
+        expand(rules.create_bed_all.output,
                 bin_length = 5000,
                 cov = 0.8                
+        ),
+        expand(rules.create_bed_grm_loco.output,
+                bin_length = 5000,
+                cov = 0.8,
+                contig = list(range(1,25))         
         ),
 #        expand(rules.create_bed_no_miss.output,
 #                bin_length = 5000,
 #                cov = 0.8                
+#        ),
+######################
+## 08_relationship_metrics.smk
+######################
+        expand(rules.make_grm_loco_man.output,
+                bin_length = 5000,
+                cov = 0.8,
+                contig = list(range(1,25))
+        ),
+#        expand(rules.make_grm.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
+#        expand(rules.make_grm_per_chrom.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                contig = list(range(1,25))
+#        ),
+#        expand(rules.make_grm_inbred.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
+#        expand(rules.make_grm_inbred_per_chrom.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                contig = list(range(1,25))
+#        ),
+#        expand(rules.plink_distance.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
+#        expand(rules.gcta_pca.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
+#        expand(rules.make_grm_no_miss.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),        
+#        expand(rules.make_grm_inbred_no_miss.output,
+#                bin_length = 5000,
+#                cov = 0.8
 #        ),
 ######################
 ## 07_GCTA.smk
@@ -250,43 +297,6 @@ rule all:
 #                assay = ["open_field", "novel_object"],
 #                state = list(range(1,16)),
 #                covars = ["None", "All"],
-#        ),
-######################
-## 08_relationship_metrics.smk
-######################
-#        expand(rules.make_grm.output,
-#                bin_length = 5000,
-#                cov = 0.8
-#        ),
-        expand(rules.make_grm_per_chrom.output,
-                bin_length = 5000,
-                cov = 0.8,
-                contig = list(range(1,25))
-        ),
-#        expand(rules.make_grm_inbred.output,
-#                bin_length = 5000,
-#                cov = 0.8
-#        ),
-#        expand(rules.make_grm_inbred_per_chrom.output,
-#                bin_length = 5000,
-#                cov = 0.8,
-#                contig = list(range(1,25))
-#        ),
-#        expand(rules.plink_distance.output,
-#                bin_length = 5000,
-#                cov = 0.8
-#        ),
-#        expand(rules.gcta_pca.output,
-#                bin_length = 5000,
-#                cov = 0.8
-#        ),
-#        expand(rules.make_grm_no_miss.output,
-#                bin_length = 5000,
-#                cov = 0.8
-#        ),        
-#        expand(rules.make_grm_inbred_no_miss.output,
-#                bin_length = 5000,
-#                cov = 0.8
 #        ),
 ######################
 ## 08_figs.smk

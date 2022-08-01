@@ -2,7 +2,7 @@ __default__:
   memory: "{resources.mem_mb}"
   n: 1
   name: "{rule}.{wildcards}"
-  queue: standard
+  queue: short
   outfile: "{log}"
 run_kruskal_wallis:
   queue: bigmem

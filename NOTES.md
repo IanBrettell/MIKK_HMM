@@ -1,5 +1,11 @@
 # Notes
 
+## 1 August 2022
+
+Discovered that GCTA outputs a different GRM matrix than the one computed manually, and looks incorrect.
+
+The .ped with all SNPs contains 20,796,377 SNPs.
+
 ## 29 July 2022
 
 SNP count of .ped with all HOM SNPs: 

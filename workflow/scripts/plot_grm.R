@@ -20,7 +20,9 @@ IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_no_miss/hdrr/5000/0.8"
 ## Inbred no missing
 IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_inbred_no_miss/hdrr/5000/0.8"
 ## Chr10
-IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_per_chr/hdrr/5000/0.8/18"
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_per_chr/hdrr/5000/0.8/10"
+## Inbred chr10
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/grms_inbred_per_chr/hdrr/5000/0.8/10"
 
 F2_SAMPLES = "/hps/software/users/birney/ian/repos/MIKK_HMM/config/F2_samples_converted.csv"
 
@@ -63,17 +65,20 @@ grm = ReadGRMBin(IN_PREF)
 
 # Convert to symmetric matrix
 # Guidance here: https://stackoverflow.com/questions/23040676/how-to-fill-in-a-matrix-given-diagonal-and-off-diagonal-elements-in-r
-m <- matrix(NA, ncol = length(grm$diag), nrow = length(grm$diag))
-m[lower.tri(m)] <- grm$off
-m[upper.tri(m)] <- t(m)[upper.tri(t(m))]
-diag(m) <- grm$diag
+A_GCTA <- matrix(NA, ncol = length(grm$diag), nrow = length(grm$diag))
+A_GCTA[lower.tri(A_GCTA)] <- grm$off
+A_GCTA[upper.tri(A_GCTA)] <- t(A_GCTA)[upper.tri(t(A_GCTA))]
+diag(A_GCTA) <- grm$diag
 
-rownames(m) = grm$id$V1
-colnames(m) = grm$id$V2
+rownames(A_GCTA) = grm$id$V1
+colnames(A_GCTA) = grm$id$V2
 
-# Get order
-ord = hclust(dist(m, method = "euclidean"), method = "ward.D")$order
-labs = rownames(m)[ord]
+# Order
+## By sample to compare with manual GRM
+ord = order(match(rownames(A_GCTA), f2$SAMPLE))
+## by cluster
+ord = hclust(dist(A_GCTA, method = "euclidean"), method = "ward.D")$order
+labs = rownames(A_GCTA)[ord]
 # Get labs with cross
 labs_x = tibble(SAMPLE = labs) %>% 
   dplyr::left_join(f2 %>% 
@@ -83,11 +88,10 @@ labs_x = tibble(SAMPLE = labs) %>%
   dplyr::mutate(S_X = paste(SAMPLE, PAT_MAT, sep = "_"))
 
 # Order matrix
-m_ord = m[ord, ord]
+A_GCTA = A_GCTA[ord, ord]
 
-# Plot
-
-df_fig = m_ord %>% 
+# Convert to Df
+df_fig = A_GCTA %>% 
   as.data.frame() %>% 
   tibble::rownames_to_column(var = "SAMPLE_1") %>% 
   tidyr::pivot_longer(-c(SAMPLE_1), names_to = "SAMPLE_2", values_to = "VALUE") %>% 
@@ -104,13 +108,12 @@ df_fig = m_ord %>%
                 S2_X = paste(SAMPLE_2, S2_PAR, sep = "_")) %>% 
   dplyr::mutate(dplyr::across(c("S1_X", "S2_X"),
                               ~factor(., levels = labs_x$S_X)))
-  # create 
 
-## Inspect values
-#df_fig %>% 
-#  dplyr::arrange(desc(VALUE)) %>% 
-#  dplyr::filter(!SAMPLE_1 == SAMPLE_2) %>% 
-#  View()
+# Inspect
+df_fig %>% 
+  dplyr::arrange(desc(VALUE)) %>% 
+  dplyr::filter(!SAMPLE_1 == SAMPLE_2) %>% 
+  View()
 
 fig = df_fig %>% 
   ggplot() +
@@ -118,6 +121,7 @@ fig = df_fig %>%
   scale_fill_viridis_c(option = "plasma") +
   theme(aspect.ratio = 1) +
   theme(axis.text.x = element_text(angle = 90))
+
 
 ggsave(OUT,
        fig,

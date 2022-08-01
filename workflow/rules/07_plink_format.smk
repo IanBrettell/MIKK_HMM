@@ -157,7 +157,7 @@ rule combine_peds:
         """
 
 # Convert .ped to .bed
-rule create_bed:
+rule create_bed_all:
     input:
         rules.combine_peds.output.ped
     output:
@@ -165,10 +165,14 @@ rule create_bed:
             config["workdir"],
             "beds/F2/hdrr/{bin_length}/{cov}.bed"
         ),
+        fam = os.path.join(
+            config["workdir"],
+            "beds/F2/hdrr/{bin_length}/{cov}.fam"
+        ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/create_bed/hdrr/{bin_length}/{cov}.log"
+            "logs/create_bed_all/hdrr/{bin_length}/{cov}.log"
         ),
     params:
         in_pref = lambda wildcards, input: input[0].replace(".ped", ""),
@@ -181,6 +185,45 @@ rule create_bed:
         """
         plink1.9 \
             --make-bed \
+            --no-fid \
+            --no-parents \
+            --no-sex \
+            --no-pheno \
+            --chr-set 24 no-xy no-mt \
+            --file {params.in_pref} \
+            --out {params.out_pref} \
+                2> {log}
+        """
+
+# Convert .ped to .bed for LOCO-GRMs
+## This step removes the target chromosome (--not-chr)
+## And all SNPs missing for at least 1 sample (--geno)
+rule create_bed_grm_loco:
+    input:
+        rules.combine_peds.output.ped
+    output:
+        bed = os.path.join(
+            config["workdir"],
+            "beds_grm_loco/F2/hdrr/{bin_length}/{cov}/{contig}.bed"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/create_bed_grm_loco/hdrr/{bin_length}/{cov}/{contig}.log"
+        ),
+    params:
+        in_pref = lambda wildcards, input: input[0].replace(".ped", ""),
+        out_pref = lambda wildcards, output: output.bed.replace(".bed", ""),
+        contig = "{contig}"
+    resources:
+        mem_mb = 5000
+    container:
+        config["plink1.9"]
+    shell:
+        """
+        plink1.9 \
+            --make-bed \
+            --not-chr {params.contig} \
             --geno 0 \
             --no-fid \
             --no-parents \
@@ -192,176 +235,176 @@ rule create_bed:
                 2> {log}
         """
 
-rule test_grm:
-    input:
-        expand(rules.impute_F2_genos.output.ab,
-            zip,
-            bin_length = 5000,
-            cov = 0.8,
-            contig = 10,
-            sample = [2, 1, 3, 18, 17, 20],
-            pat = ["38-2", "38-2", "38-2", "8-2", "8-2", "8-2"],
-            mat = ["21-2", "21-2", "21-2", "40-1", "40-1", "40-1"]
-        )
-    output:
-        toy_ped = os.path.join(
-            config["workdir"],
-            "grm_test/F2/hdrr/{bin_length}/{cov}.bed"
-        ),
-    log:
-        os.path.join(
-            config["workdir"],
-            "logs/create_bed/hdrr/{bin_length}/{cov}.log"
-        ),
-    resources:
-        mem_mb = 30000,
-    script:
-        "../scripts/test_grm.R" 
-
-#####################
-# No missing
-#####################
-
-# Create .ped and .map files with format
-## This time, remove all SNPs with a single missing genotype
-rule create_ped_contigs_no_miss:
-    input:
-        expand(os.path.join(
-            config["workdir"],
-            "F2_with_genos/hdrr/{{bin_length}}/{{cov}}/{sample}_{pat}_{mat}.csv"
-            ),
-                zip,
-                sample = SAMPLES_F2_ZIP,
-                pat = PAT_ZIP,
-                mat = MAT_ZIP
-        ),
-    output:
-        ped = os.path.join(
-            config["workdir"],
-            "peds_contigs_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ped"
-        ),
-        map = os.path.join(
-            config["workdir"],
-            "peds_contigs_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.map"
-        ),
-    log:
-        os.path.join(
-            config["workdir"],
-            "logs/create_ped_contigs_no_miss/{bin_length}/{cov}/{contig}.log"
-        ),
-    params:
-        contig = "{contig}"
-    resources:
-        mem_mb = 30000,
-    container:
-        # requires tidyr >= v1.2
-        config["tidyverse_4.1.3"]
-    script:
-        "../scripts/create_ped_no_miss.R"
-
-# Remove sample columns
-rule remove_sample_col_no_miss:
-    input:
-        rules.create_ped_contigs_no_miss.output.ped
-    output:
-        ped = os.path.join(
-            config["workdir"],
-            "peds_contigs_no_sample_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ped"
-        ),
-        ids = os.path.join(
-            config["workdir"],
-            "peds_contigs_sample_ids_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ids"
-        ),
-    log:
-        os.path.join(
-            config["workdir"],
-            "logs/remove_sample_col_no_miss/{bin_length}/{cov}/{contig}.log"
-        ),
-    params:
-        contig = "{contig}"
-    resources:
-        mem_mb = 5000,
-    shell:
-        """
-        cut -f1 {input} > {output.ids} && \
-        cut -f2- {input} > {output.ped} \
-            2> {log}
-        """
-
-# Combine contig .peds into single .ped
-rule combine_peds_no_miss:
-    input:
-        ids = os.path.join(
-            config["workdir"],
-            "peds_contigs_sample_ids_no_miss/F2/hdrr/{bin_length}/{cov}/1.ids"
-        ),
-        peds = expand(os.path.join(
-            config["workdir"],
-            "peds_contigs_no_sample_no_miss/F2/hdrr/{{bin_length}}/{{cov}}/{contig}.ped"
-            ),
-                contig = list(range(1, 25))
-        ),
-        maps = expand(os.path.join(
-            config["workdir"],
-            "peds_contigs_no_miss/F2/hdrr/{{bin_length}}/{{cov}}/{contig}.map"
-            ),
-                contig = list(range(1, 25))
-        ),
-    output: 
-        ped = os.path.join(
-            config["workdir"],
-            "peds_no_miss/F2/hdrr/{bin_length}/{cov}.ped"
-        ),
-        map = os.path.join(
-            config["workdir"],
-            "peds_no_miss/F2/hdrr/{bin_length}/{cov}.map"
-        ),
-    log:
-        os.path.join(
-            config["workdir"],
-            "logs/combine_peds_no_miss/{bin_length}/{cov}.log"
-        ),
-    resources:
-        mem_mb = 50000,
-    shell:
-        """
-        paste -d$'\\t' {input.ids} {input.peds} > {output.ped} && \
-        cat {input.maps} > {output.map} \
-            2> {log}
-        """
-
-# Convert .ped to .bed
-rule create_bed_no_miss:
-    input:
-        rules.combine_peds_no_miss.output.ped
-    output:
-        bed = os.path.join(
-            config["workdir"],
-            "beds_no_miss/F2/hdrr/{bin_length}/{cov}.bed"
-        ),
-    log:
-        os.path.join(
-            config["workdir"],
-            "logs/create_bed_no_miss/hdrr/{bin_length}/{cov}.log"
-        ),
-    params:
-        in_pref = lambda wildcards, input: input[0].replace(".ped", ""),
-        out_pref = lambda wildcards, output: output.bed.replace(".bed", ""),
-    resources:
-        mem_mb = 5000
-    container:
-        config["plink1.9"]
-    shell:
-        """
-        plink1.9 \
-            --make-bed \
-            --no-fid \
-            --no-parents \
-            --no-sex \
-            --no-pheno \
-            --chr-set 24 no-xy no-mt \
-            --file {params.in_pref} \
-            --out {params.out_pref} \
-                2> {log}
-        """
-
+#rule test_grm:
+#    input:
+#        expand(rules.impute_F2_genos.output.ab,
+#            zip,
+#            bin_length = 5000,
+#            cov = 0.8,
+#            contig = 10,
+#            sample = [2, 1, 3, 18, 17, 20],
+#            pat = ["38-2", "38-2", "38-2", "8-2", "8-2", "8-2"],
+#            mat = ["21-2", "21-2", "21-2", "40-1", "40-1", "40-1"]
+#        )
+#    output:
+#        toy_ped = os.path.join(
+#            config["workdir"],
+#            "grm_test/F2/hdrr/{bin_length}/{cov}.bed"
+#        ),
+#    log:
+#        os.path.join(
+#            config["workdir"],
+#            "logs/create_bed/hdrr/{bin_length}/{cov}.log"
+#        ),
+#    resources:
+#        mem_mb = 30000,
+#    script:
+#        "../scripts/test_grm.R" 
+#
+######################
+## No missing
+######################
+#
+## Create .ped and .map files with format
+### This time, remove all SNPs with a single missing genotype
+#rule create_ped_contigs_no_miss:
+#    input:
+#        expand(os.path.join(
+#            config["workdir"],
+#            "F2_with_genos/hdrr/{{bin_length}}/{{cov}}/{sample}_{pat}_{mat}.csv"
+#            ),
+#                zip,
+#                sample = SAMPLES_F2_ZIP,
+#                pat = PAT_ZIP,
+#                mat = MAT_ZIP
+#        ),
+#    output:
+#        ped = os.path.join(
+#            config["workdir"],
+#            "peds_contigs_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ped"
+#        ),
+#        map = os.path.join(
+#            config["workdir"],
+#            "peds_contigs_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.map"
+#        ),
+#    log:
+#        os.path.join(
+#            config["workdir"],
+#            "logs/create_ped_contigs_no_miss/{bin_length}/{cov}/{contig}.log"
+#        ),
+#    params:
+#        contig = "{contig}"
+#    resources:
+#        mem_mb = 30000,
+#    container:
+#        # requires tidyr >= v1.2
+#        config["tidyverse_4.1.3"]
+#    script:
+#        "../scripts/create_ped_no_miss.R"
+#
+## Remove sample columns
+#rule remove_sample_col_no_miss:
+#    input:
+#        rules.create_ped_contigs_no_miss.output.ped
+#    output:
+#        ped = os.path.join(
+#            config["workdir"],
+#            "peds_contigs_no_sample_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ped"
+#        ),
+#        ids = os.path.join(
+#            config["workdir"],
+#            "peds_contigs_sample_ids_no_miss/F2/hdrr/{bin_length}/{cov}/{contig}.ids"
+#        ),
+#    log:
+#        os.path.join(
+#            config["workdir"],
+#            "logs/remove_sample_col_no_miss/{bin_length}/{cov}/{contig}.log"
+#        ),
+#    params:
+#        contig = "{contig}"
+#    resources:
+#        mem_mb = 5000,
+#    shell:
+#        """
+#        cut -f1 {input} > {output.ids} && \
+#        cut -f2- {input} > {output.ped} \
+#            2> {log}
+#        """
+#
+## Combine contig .peds into single .ped
+#rule combine_peds_no_miss:
+#    input:
+#        ids = os.path.join(
+#            config["workdir"],
+#            "peds_contigs_sample_ids_no_miss/F2/hdrr/{bin_length}/{cov}/1.ids"
+#        ),
+#        peds = expand(os.path.join(
+#            config["workdir"],
+#            "peds_contigs_no_sample_no_miss/F2/hdrr/{{bin_length}}/{{cov}}/{contig}.ped"
+#            ),
+#                contig = list(range(1, 25))
+#        ),
+#        maps = expand(os.path.join(
+#            config["workdir"],
+#            "peds_contigs_no_miss/F2/hdrr/{{bin_length}}/{{cov}}/{contig}.map"
+#            ),
+#                contig = list(range(1, 25))
+#        ),
+#    output: 
+#        ped = os.path.join(
+#            config["workdir"],
+#            "peds_no_miss/F2/hdrr/{bin_length}/{cov}.ped"
+#        ),
+#        map = os.path.join(
+#            config["workdir"],
+#            "peds_no_miss/F2/hdrr/{bin_length}/{cov}.map"
+#        ),
+#    log:
+#        os.path.join(
+#            config["workdir"],
+#            "logs/combine_peds_no_miss/{bin_length}/{cov}.log"
+#        ),
+#    resources:
+#        mem_mb = 50000,
+#    shell:
+#        """
+#        paste -d$'\\t' {input.ids} {input.peds} > {output.ped} && \
+#        cat {input.maps} > {output.map} \
+#            2> {log}
+#        """
+#
+## Convert .ped to .bed
+#rule create_bed_no_miss:
+#    input:
+#        rules.combine_peds_no_miss.output.ped
+#    output:
+#        bed = os.path.join(
+#            config["workdir"],
+#            "beds_no_miss/F2/hdrr/{bin_length}/{cov}.bed"
+#        ),
+#    log:
+#        os.path.join(
+#            config["workdir"],
+#            "logs/create_bed_no_miss/hdrr/{bin_length}/{cov}.log"
+#        ),
+#    params:
+#        in_pref = lambda wildcards, input: input[0].replace(".ped", ""),
+#        out_pref = lambda wildcards, output: output.bed.replace(".bed", ""),
+#    resources:
+#        mem_mb = 5000
+#    container:
+#        config["plink1.9"]
+#    shell:
+#        """
+#        plink1.9 \
+#            --make-bed \
+#            --no-fid \
+#            --no-parents \
+#            --no-sex \
+#            --no-pheno \
+#            --chr-set 24 no-xy no-mt \
+#            --file {params.in_pref} \
+#            --out {params.out_pref} \
+#                2> {log}
+#        """
+#

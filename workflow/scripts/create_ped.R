@@ -73,7 +73,7 @@ df = dat_list %>%
   dplyr::arrange(CHROM, POS) %>% 
   # add SNP column
   dplyr::mutate(SNP = paste(CHROM, POS, sep = ":")) %>% 
-  # send to rowname
+  # send SNP to rowname
   tibble::column_to_rownames(var = "SNP") %>% 
   # replace NA with 00 as required by Plink https://www.cog-genomics.org/plink/1.9/input#plink_irreg
   dplyr::mutate(dplyr::across(-c(CHROM, POS),
