@@ -10,7 +10,7 @@ include: "rules/06_F0_state_freq.smk"
 include: "rules/06_F2_state_freq.smk"
 include: "rules/07_plink_format.smk"
 include: "rules/08_relationship_metrics.smk"
-#include: "rules/07_GCTA_state_freq.smk"
+include: "rules/07_GCTA_mean_speed.smk"
 #include: "rules/08_figs.smk"
 
 
@@ -22,6 +22,7 @@ rule all:
 ## 00_common.smk
 ######################
         rules.get_line_ranks_and_colours.output,
+        rules.plot_line_median_and_variance.output,
 ######################
 ## 01_ref.smk
 ######################
@@ -113,15 +114,15 @@ rule all:
 #                pat = PAT_ZIP,
 #                mat = MAT_ZIP             
 #        ),
-        expand(rules.impute_F2_genos.output,
-                zip,
-                bin_length = [5000] * len(SAMPLES_F2_ZIP) * 24,
-                cov = [0.8] * len(SAMPLES_F2_ZIP) * 24,
-                sample = SAMPLES_F2_ZIP * 24,
-                pat = PAT_ZIP * 24,
-                mat = MAT_ZIP * 24,
-                contig = [ele for ele in list(range(1,25)) for i in range(len(SAMPLES_F2_ZIP))]             
-        ),
+#        expand(rules.impute_F2_genos.output,
+#                zip,
+#                bin_length = [5000] * len(SAMPLES_F2_ZIP) * 24,
+#                cov = [0.8] * len(SAMPLES_F2_ZIP) * 24,
+#                sample = SAMPLES_F2_ZIP * 24,
+#                pat = PAT_ZIP * 24,
+#                mat = MAT_ZIP * 24,
+#                contig = [ele for ele in list(range(1,25)) for i in range(len(SAMPLES_F2_ZIP))]             
+#        ),
 ######################
 ## 05_KCC_calling.smk
 ######################
@@ -150,20 +151,21 @@ rule all:
 #                state = list(range(1,16))
 #        ),
 #        expand(rules.mean_speed_F2.output,
-#                dge = config["dge_sge"]
+#                interval = 0.05,
+#                dge_sge = config["dge_sge"]
 #        ),
 ######################
 ## 07_plink_format.smk
 ######################
-        expand(rules.get_samples_no_calls.output,
-                bin_length = 5000,
-                cov = 0.8,
-                contig = list(range(1, 25))
-        ),
-        expand(rules.get_samples_no_calls_all_chr.output,
-                bin_length = 5000,
-                cov = 0.8
-        ),
+#        expand(rules.get_samples_no_calls.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                contig = list(range(1, 25))
+#        ),
+#        expand(rules.get_samples_no_calls_all_chr.output,
+#                bin_length = 5000,
+#                cov = 0.8
+#        ),
 #        expand(rules.create_ped_contigs.output,
 #                bin_length = 5000,
 #                cov = 0.8,
@@ -183,15 +185,15 @@ rule all:
 #                bin_length = 5000,
 #                cov = 0.8
 #        ),
-        expand(rules.create_bed_all.output,
-                bin_length = 5000,
-                cov = 0.8                
-        ),
-        expand(rules.create_bed_grm_loco.output,
-                bin_length = 5000,
-                cov = 0.8,
-                contig = list(range(1,25))         
-        ),
+#        expand(rules.create_bed_all.output,
+#                bin_length = 5000,
+#                cov = 0.8                
+#        ),
+#        expand(rules.create_bed_grm_loco.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                contig = list(range(1,25))         
+#        ),
 #        expand(rules.create_bed_no_miss.output,
 #                bin_length = 5000,
 #                cov = 0.8                
@@ -204,6 +206,11 @@ rule all:
                 cov = 0.8,
                 contig = list(range(1,25))
         ),
+#        expand(rules.make_grm_loco_man_no_miss.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                contig = list(range(1,2))
+#        ),
 #        expand(rules.make_grm.output,
 #                bin_length = 5000,
 #                cov = 0.8
@@ -239,7 +246,79 @@ rule all:
 #                cov = 0.8
 #        ),
 ######################
-## 07_GCTA.smk
+## 07_GCTA_mean_speed.smk
+######################
+#        expand(rules.create_phen_mean_speed.output,
+#                interval = 0.05,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#        ),
+#        expand(rules.permute_phen_mean_speed.output,
+#                interval = 0.05,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.create_covar_mean_speed.output,
+#                covars = "time-quadrant"
+#        ),
+        expand(rules.permute_covars_mean_speed.output,
+                covars = "time-quadrant",
+                seed = PERM_SEEDS
+        ),
+        expand(rules.run_mlma_loco_mean_speed.output,
+                interval = 0.05,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                covars = ["None", "time-quadrant"],
+                contig = list(range(1,22))
+        ),
+        expand(rules.combine_mlma_outputs_mean_speed.output,
+                interval = 0.05,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                covars = ["None", "time-quadrant"]
+        ),
+        expand(rules.run_mlma_loco_mean_speed_permuted.output,
+                interval = 0.05,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                covars = ["None", "time-quadrant"],
+                contig = list(range(1,22)),
+                seed = PERM_SEEDS
+        ),
+        expand(rules.combine_mlma_outputs_mean_speed_permuted.output,
+                interval = 0.05,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                covars = ["None", "time-quadrant"],
+                seed = PERM_SEEDS
+        ),
+        expand(rules.get_manhattan_gcta_mean_speed.output,
+                interval = 0.05,
+                bin_length = 5000,
+                cov = 0.8,
+                dge_sge = config["dge_sge"],
+                transformation = ["notrans", "invnorm"],
+                assay = ["open_field", "novel_object"],
+                covars = ["None", "time-quadrant"],
+        ),
+######################
+## 07_GCTA_state_freq.smk
 ######################
 #        expand(rules.create_phen.output,
 #                dge_sge = config["dge_sge"],

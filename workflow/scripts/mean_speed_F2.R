@@ -26,7 +26,12 @@ DGE_SGE = snakemake@params[["dge_sge"]]
 
 # Read data
 
-raw = readr::read_csv(IN)
+raw = readr::read_csv(IN) %>% 
+  # convert `time` to character and add a 0 if only 3 characters
+  dplyr::mutate(time = as.character(time),
+                time = dplyr::if_else(nchar(time) == 3,
+                                      paste("0", time, sep = ""),
+                                      time))
 
 # Add inverse-normalisation function
 invnorm = function(x) {

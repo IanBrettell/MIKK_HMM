@@ -32,8 +32,12 @@ OUT_DIR_IV = dirname(OUT_CSV_IV[[1]])
 ## so that the recoded states are the same across those datasets (as they're
 ## sorted by mean speed, which may differ across datasets)
 
-raw = readr::read_csv(IN)
-
+raw = readr::read_csv(IN) %>% 
+  # convert `time` to character and add a 0 if only 3 characters
+  dplyr::mutate(time = as.character(time),
+                time = dplyr::if_else(nchar(time) == 3,
+                                      paste("0", time, sep = ""),
+                                      time))
 
 # Add inverse-normalisation function
 invnorm = function(x) {

@@ -12,7 +12,7 @@ library(genio)
 # Set variables
 
 ## Debug
-IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds_grm_loco/F2/hdrr/5000/0.8/22"
+IN_PREF = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds_all/F2/hdrr/5000/0.8/22"
 F2_SAMPLES = "/hps/software/users/birney/ian/repos/MIKK_HMM/config/F2_samples_converted.csv"
 
 ## True

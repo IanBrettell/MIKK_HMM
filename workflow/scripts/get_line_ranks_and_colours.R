@@ -23,12 +23,20 @@ INTERVAL = snakemake@params[["interval"]] %>%
   as.numeric()
 SELECTED_LINES = snakemake@params[["selected_lines"]] %>% 
   unlist()
-OUT_FIG = snakemake@output[["fig"]]
+PNG_ALL = snakemake@output[["png_all"]]
+PDF_ALL = snakemake@output[["pdf_all"]]
+PNG_SELECT = snakemake@output[["png_select"]]
+PDF_SELECT = snakemake@output[["pdf_select"]]
 OUT_CSV = snakemake@output[["csv"]]
 
 # Read in file
 
-raw = readr::read_csv(IN)
+raw = readr::read_csv(IN) %>% 
+  # convert `time` to character and add a 0 if only 3 characters
+  dplyr::mutate(time = as.character(time),
+                time = dplyr::if_else(nchar(time) == 3,
+                                      paste("0", time, sep = ""),
+                                      time))
 
 # Process
 
@@ -85,9 +93,40 @@ df = df %>%
 sel_pal = c("red", "dimgrey")
 names(sel_pal) = c("yes", "no")
 
-# Plot
+# Plot all lines
 
-out_plot = df %>% 
+fig_all = df %>% 
+  ggplot(aes(test_fish, mean_speed, fill = test_fish)) + 
+  geom_boxplot() +
+  ggbeeswarm::geom_beeswarm(size = 0.25) +
+  scale_fill_manual(values = PAL) +
+  coord_flip() +
+  guides(fill = "none") +
+  cowplot::theme_cowplot() +
+  scale_x_discrete(limits = rev(levels(df$test_fish))) +
+  xlab("line") +
+  ylab(paste("mean speed (pixels per", INTERVAL, "seconds)", sep = " ")) +
+  labs(colour='selected\nfor F2 cross')
+
+ggsave(PNG_ALL,
+       fig_all,
+       device = "png",
+       width = 8,
+       height = 11,
+       units = "in",
+       dpi = 400)
+
+ggsave(PDF_ALL,
+       fig_all,
+       device = "pdf",
+       width = 8,
+       height = 11,
+       units = "in",
+       dpi = 400)
+  
+# Highlighting selected lines
+
+fig_select = df %>% 
   ggplot(aes(test_fish, mean_speed, fill = test_fish)) + 
   geom_boxplot(aes(colour = selected)) +
   ggbeeswarm::geom_beeswarm(size = 0.25) +
@@ -100,10 +139,18 @@ out_plot = df %>%
   xlab("line") +
   ylab(paste("mean speed (pixels per", INTERVAL, "seconds)", sep = " ")) +
   labs(colour='selected\nfor F2 cross')
-  
-ggsave(OUT_FIG,
-       out_plot,
+
+ggsave(PNG_SELECT,
+       fig_select,
        device = "png",
+       width = 8,
+       height = 11,
+       units = "in",
+       dpi = 400)
+
+ggsave(PDF_SELECT,
+       fig_select,
+       device = "pdf",
        width = 8,
        height = 11,
        units = "in",

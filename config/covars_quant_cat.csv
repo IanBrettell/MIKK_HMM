@@ -1,0 +1,5 @@
+COVAR,Q_C
+date,cat
+time,quant
+quadrant,cat
+tank_side,cat

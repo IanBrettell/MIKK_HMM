@@ -11,22 +11,25 @@ library(tidyverse)
 # Get variables
 
 ## Debug
-
-#IN = "/hps/nobackup/birney/users/ian/somites/phens/true/unsegmented_psm_area.phen"
-#PHENO = "unsegmented_psm_area"
-#SEED = 1
+FAM = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.fam"
+PHEN = "/hps/nobackup/birney/users/ian/MIKK_HMM/phens_ms/true/0.05/dge/invnorm/novel_object.phen"
+SEED = 1
 
 ## True
-IN = snakemake@input[[1]]
-PHENO = snakemake@params[["phenotype"]]
+FAM = snakemake@input[["fam"]]
+PHEN = snakemake@input[["phen"]]
 SEED = snakemake@params[["seed"]] %>% 
   as.numeric()
 OUT = snakemake@output[[1]]
 
-# Read in file
+# Read in files
 
-df = readr::read_tsv(IN, 
-                     col_names = c("FID", "IID", PHENO))
+fam = genio::read_fam(FAM) %>% 
+  dplyr::select(SAMPLE = id) %>% 
+  dplyr::mutate(SAMPLE = as.numeric(SAMPLE))
+
+df = readr::read_tsv(PHEN, 
+                     col_names = c("FID", "IID", "PHENO"))
 
 # Reorder sample
 
@@ -35,10 +38,11 @@ df$FID = sample(df$FID)
 set.seed(SEED)
 df$IID = sample(df$IID)
 
-# Arrange back to numerical order
+# Arrange back to original order
 
-out = df %>% 
-  dplyr::arrange(FID)
+out = fam %>% 
+  dplyr::left_join(df,
+                   by = c("SAMPLE" = "FID")) 
 
 # Save to file
 

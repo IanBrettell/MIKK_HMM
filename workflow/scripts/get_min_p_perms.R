@@ -12,8 +12,8 @@ library(tidyverse)
 
 ## Debug
 
-IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/permuted/hdrr/5000/0.8/dge/notrans/novel_object/1/All/1.loco.mlma",
-          "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/permuted/hdrr/5000/0.8/dge/notrans/novel_object/1/All/2.loco.mlma")
+IN = list("/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_mean_speed_consol/permuted/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant/1.mlma",
+          "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_mean_speed_consol/permuted/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant/2.mlma")
 
 ## True
 
@@ -25,7 +25,7 @@ OUT = snakemake@output[[1]]
 names(IN) = IN %>% 
   unlist() %>% 
   basename(.) %>% 
-  stringr::str_remove(".loco.mlma")
+  stringr::str_remove(".mlma")
 
 df = purrr::map_dfr(IN, function(FILE) {
   readr::read_tsv(FILE,

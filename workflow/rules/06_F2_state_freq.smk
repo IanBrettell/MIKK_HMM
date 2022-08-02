@@ -33,21 +33,26 @@ rule state_freq_F2:
 # Calculate each F2's mean speed
 rule mean_speed_F2:
     input:
-        data = rules.split_datasets.output.F2,
+        data = expand(os.path.join(
+            config["workdir"],
+            "hmm_out_split/{{interval}}/{variables}/{n_states}/F2.csv"),
+                variables = "dist_angle",
+                n_states = 15,
+        ),
     output:
         csv_notrans = os.path.join(
             config["workdir"],
-            "mean_speed_F2/{dge_sge}/notrans.csv"
+            "mean_speed_F2/{interval}/{dge_sge}/notrans.csv"
             ),
         csv_invnorm = os.path.join(
             config["workdir"],
-            "mean_speed_F2/{dge_sge}/invnorm.csv"
+            "mean_speed_F2/{interval}/{dge_sge}/invnorm.csv"
             ),
-        hist = "book/figs/state_freq_F2/{dge_sge}.png",
+        hist = "book/figs/state_freq_F2/{interval}/{dge_sge}.png",
     log:
         os.path.join(
             config["workdir"],
-            "logs/state_freq_F2/{dge_sge}.log"
+            "logs/state_freq_F2/{interval}/{dge_sge}.log"
         ),
     params:
         dge_sge = "{dge_sge}"

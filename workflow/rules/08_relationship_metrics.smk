@@ -31,7 +31,7 @@ rule make_grm_loco_man:
 # The 44K with no missing calls
 rule make_grm_loco_man_no_miss:
     input:
-        bed = rules.create_bed_grm_loco.output.bed,
+        bed = rules.create_bed_all.output.bed,
         F2_samples =  config["F2_samples_file"]
     output:
         grm = os.path.join(
@@ -49,8 +49,8 @@ rule make_grm_loco_man_no_miss:
         in_pref = lambda wildcards, input: input.bed.replace(".bed", ""),
         out_pref = lambda wildcards, output: output.grm.replace(".grm.bin", ""),    
     resources:
-        mem_mb = 300000,
-        threads = 1
+        mem_mb = 800000,
+        queue = "bigmem"
     container:
         config["R_4.2.0"]
     script:

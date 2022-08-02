@@ -2,11 +2,11 @@ __default__:
   memory: "{resources.mem_mb}"
   n: 1
   name: "{rule}.{wildcards}"
-  queue: short
+  queue: standard
   outfile: "{log}"
 run_kruskal_wallis:
   queue: bigmem
 bwa_mem2_mem:
   n: "{threads}"
-#create_ped:
-#  queue: bigmem
+make_grm_loco_man_no_miss:
+  queue: "{resources.queue}"

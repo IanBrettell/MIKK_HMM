@@ -23,7 +23,10 @@ rule get_line_ranks_and_colours:
             "hmm_out_split/0.05/dist_angle/15/F0.csv",
         ),
     output:
-        fig = "book/figs/line_mean_speed/line_mean_speed_0.05.png",
+        png_all = "book/figs/line_mean_speed/line_mean_speed_0.05_all.png",
+        pdf_all = "book/figs/line_mean_speed/line_mean_speed_0.05_all.pdf",
+        png_select = "book/figs/line_mean_speed/line_mean_speed_0.05_selected.png",
+        pdf_select = "book/figs/line_mean_speed/line_mean_speed_0.05_selected.pdf",
         csv = "config/line_colours/line_colours_0.05.csv"
     log:
         os.path.join(
@@ -39,6 +42,34 @@ rule get_line_ranks_and_colours:
         config["R_4.2.0"]
     script:
         "../scripts/get_line_ranks_and_colours.R"
+
+rule plot_line_median_and_variance:
+    input:
+        dat = os.path.join(
+            config["workdir"],
+            "hmm_out_split/0.05/dist_angle/15/F0.csv",
+        ),
+        line_cols = rules.get_line_ranks_and_colours.output.csv,
+    output:
+        png_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_0.05_all.png",
+        pdf_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_0.05_all.pdf",
+        png_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_selected.png",
+        pdf_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_selected.pdf",
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/plot_line_median_and_variance/all.log"
+        ),
+    params:
+        interval = 0.08,
+        selected_lines = config["selected_lines"]
+    resources:
+        mem_mb = lambda wildcards, attempt: attempt * 20000
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/plot_line_median_and_variance.R"
+
 
 # Get the sample counts for each cross
 rule count_crosses:

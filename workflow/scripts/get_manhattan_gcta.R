@@ -12,19 +12,21 @@ library(tidyverse)
 
 ## Debug
 
-IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/true/hdrr/5000/0.8/dge/notrans/open_field/1/None.loco.mlma"
-MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/5000/0.8/dge/notrans/open_field/1/None.csv"
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_mean_speed_consol/true/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant.mlma"
+MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant.csv"
 BIN_LENGTH = "5000" %>% 
   as.numeric()
 COV = "0.8" %>% 
   as.numeric()
-COVARS = "None"
+COVARS = "time-quadrant" %>% 
+  stringr::str_replace("-", ",")
 STATE = "1" %>% 
   as.numeric()
 DGE_SGE = "dge" %>% 
   toupper()
-ASSAY = "open_field"
-TRANS = "notrans"
+ASSAY = "novel_object"
+TRANS = "invnorm"
+PHENO = "mean_speed"
 
 ## True
 
@@ -41,18 +43,23 @@ ASSAY = snakemake@params[["assay"]]
 STATE = snakemake@params[["state"]] %>% 
   as.numeric()
 COVARS =snakemake@params[["covars"]]
+PHENO = snakemake@params[["pheno"]]
 OUT = snakemake@output[["man"]]
 
 ########################
 # Plotting parameters
 ########################
 
-if (DGE_SGE == "DGE"){
+# One palette for mean speed
+if (PHENO == "mean_speed"){
+  gwas_pal = c("red", "#A4036F", "#EE851B")
+  # Others for state frequency
+} else if (PHENO == "state_freq" & DGE_SGE == "DGE"){
   # get palette
   col = viridis::viridis(n = 15)
   # get complementary colours
   gwas_pal = c("red", col[STATE], colortools::analogous(col[STATE])[2])
-} else if (DGE_SGE == "SGE"){
+} else if (PHENO == "state_freq" & DGE_SGE == "SGE"){
   # get palette
   col = viridis::inferno(n = 15)
   # get complementary colours
@@ -128,12 +135,25 @@ BONF_SIG = 0.05 / nrow(df)
 
 # Set title
 
-TITLE = paste(DGE_SGE,
-              "\nAssay: ",
-              ASSAY,
-              "\nState: ",
-              STATE
-              )
+if (PHENO == "mean_speed"){
+  TITLE = paste(DGE_SGE,
+                "\nAssay: ",
+                ASSAY,
+                "\nPhenotype: mean speed",
+                sep = ""
+                )  
+} else if (PHENO == "state_freq"){
+  TITLE = paste(DGE_SGE,
+                "\nAssay: ",
+                ASSAY,
+                "\nPhenotype: state frequency",
+                "\nState: ",
+                STATE,
+                sep = ""
+  )
+}
+
+
 
 SUBTITLE = paste("Transformation: ",
                  TRANS,
@@ -142,7 +162,8 @@ SUBTITLE = paste("Transformation: ",
                  "\nEmission covariances: ",
                  COV,
                  "\nBin length: ",
-                 BIN_LENGTH)
+                 BIN_LENGTH,
+                 sep = "")
 
 ########################
 # Manhattan plot function
