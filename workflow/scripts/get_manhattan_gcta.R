@@ -42,17 +42,21 @@ TRANS = snakemake@params[["transformation"]]
 ASSAY = snakemake@params[["assay"]]
 STATE = snakemake@params[["state"]] %>% 
   as.numeric()
-COVARS =snakemake@params[["covars"]]
+COVARS =snakemake@params[["covars"]] %>% 
+  stringr::str_replace("-", ", ")
 PHENO = snakemake@params[["pheno"]]
+  stringr::str_replace("-", ",")
 OUT = snakemake@output[["man"]]
 
 ########################
 # Plotting parameters
 ########################
 
-# One palette for mean speed
-if (PHENO == "mean_speed"){
+# Palettes for mean speed
+if (PHENO == "mean_speed" & DGE_SGE == "DGE"){
   gwas_pal = c("red", "#A4036F", "#EE851B")
+} else if (PHENO == "mean_speed" & DGE_SGE == "SGE"){
+  gwas_pal = c("red", "#55DDE0", "#33658A")
   # Others for state frequency
 } else if (PHENO == "state_freq" & DGE_SGE == "DGE"){
   # get palette
