@@ -85,7 +85,7 @@ rule create_covar_mean_speed:
     container:
         config["R_4.2.0"]
     script:
-        "../scripts/create_covar_mean_speed.R"
+        "../scripts/create_covar.R"
 
 rule permute_covars_mean_speed:
     input:

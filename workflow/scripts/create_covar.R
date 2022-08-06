@@ -11,40 +11,54 @@ library(tidyverse)
 # Get variables
 
 ## Debug
-PED = "/hps/nobackup/birney/users/ian/MIKK_HMM/peds/F2/hdrr/5000/0.8.ped"
+FAM = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.fam"
 SAMPLES_FILE = "config/F2_samples_converted.csv"
+COVARS_QC = "config/covars_quant_cat.csv"
 ASSAY = "open_field" %>% 
   stringr::str_replace('_', ' ')
+COVARS = "time-quadrant" %>% 
+  stringr::str_split("-", simplify = T) %>% 
+  as.vector()
 
 ## True
-PED = snakemake@input[["ped"]]
+FAM = snakemake@input[["fam"]]
 SAMPLES_FILE = snakemake@input[["samples_file"]]
+COVARS_QC = snakemake@input[["covars_qc"]]
 OUT_CAT = snakemake@output[["cat"]]
 OUT_QUANT = snakemake@output[["quant"]]
 ASSAY = snakemake@params[["assay"]] %>% 
   stringr::str_replace('_', ' ')
+COVARS = snakemake@params[["covars"]] %>% 
+  stringr::str_split("-", simplify = T) %>% 
+  as.vector()
+
+# Split covars by quant vs cat
+covars_qc = readr::read_csv(COVARS_QC)
+covars_cat = covars_qc %>% 
+  dplyr::filter(Q_C == "cat") %>% 
+  dplyr::pull(COVAR)
+covars_quant = covars_qc %>% 
+  dplyr::filter(Q_C == "quant") %>% 
+  dplyr::pull(COVAR)
+
+COVARS_C = COVARS[COVARS %in% covars_cat]
+COVARS_Q = COVARS[COVARS %in% covars_quant]
 
 # Read in files
 
-pedp = readr::read_tsv(PED,
-                       col_names = "SAMPLE",
-                       col_types = "i",
-                       col_select = 1)
+fam = genio::read_fam(FAM) %>% 
+  dplyr::select(SAMPLE = id) %>% 
+  dplyr::mutate(SAMPLE = as.numeric(SAMPLE))
 
 samples = readr::read_csv(SAMPLES_FILE) %>% 
-#  # create `indiv` column
-#  tidyr::unite(date, time, quadrant,
-#               col = "indiv",
-#               sep = "_",
-#               remove = F) %>% 
-  # rename `finclip_id` as SAMPLE to match `pedp`
+  # rename `finclip_id` as SAMPLE to match `fam`
   dplyr::rename(SAMPLE = finclip_id) %>%
   # select key columns
-  dplyr::select(SAMPLE, date, time, quadrant, tank_side)
+  dplyr::select(SAMPLE, dplyr::all_of(COVARS))
 
 # Join
 
-covar = pedp %>% 
+covar = fam %>% 
   # join samples with ID and individual
   dplyr::left_join(.,
                    samples,
@@ -54,10 +68,10 @@ covar = pedp %>%
 
 # Split into categorical and quantitative variables
 covar_cat = covar %>% 
-  dplyr::select(SAMPLE, IID, date, quadrant, tank_side)
+  dplyr::select(SAMPLE, IID, dplyr::all_of(COVARS_C))
 
 covar_quant = covar %>% 
-  dplyr::select(SAMPLE, IID, time)
+  dplyr::select(SAMPLE, IID, dplyr::all_of(COVARS_Q))
 
 readr::write_tsv(covar_cat, OUT_CAT, col_names = F)
 readr::write_tsv(covar_quant, OUT_QUANT, col_names = F)

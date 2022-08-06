@@ -8,18 +8,18 @@ rule create_phen_state_freq:
         ),
         phenos = os.path.join(
             config["workdir"],
-            "state_freq_F2/{interval}/{dge_sge}/{transformation}/{state}.csv"
+            "state_freq_F2/{variables}/{interval}/{n_states}/{dge_sge}/{transformation}/{state}.csv"
             ),
         samples_file = config["F2_samples_file"]
     output:
         os.path.join(
             config["workdir"],
-            "phens_sf/true/{interval}/{dge_sge}/{transformation}/{assay}/{state}.phen"
+            "phens_sf/true/{variables}/{interval}/{n_states}/{dge_sge}/{transformation}/{assay}/{state}.phen"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/create_phen_state_freq/{interval}/{dge_sge}/{transformation}/{assay}/{state}.log"
+            "logs/create_phen_state_freq/{variables}/{interval}/{n_states}/{dge_sge}/{transformation}/{assay}/{state}.log"
         ),
     params:
         assay = "{assay}"        
@@ -37,12 +37,12 @@ rule permute_phen_state_freq:
     output:
         os.path.join(
             config["workdir"],
-            "phens_sf/permuted/{interval}/{dge_sge}/{transformation}/{assay}/{state}/{seed}.phen"
+            "phens_sf/permuted/{variables}/{interval}/{n_states}/{dge_sge}/{transformation}/{assay}/{state}/{seed}.phen"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/permute_phen_state_freq/{interval}/{dge_sge}/{transformation}/{assay}/{state}/{seed}.log"
+            "logs/permute_phen_state_freq/{variables}/{interval}/{n_states}/{dge_sge}/{transformation}/{assay}/{state}/{seed}.log"
         ),
     params:
         seed = "{seed}"
@@ -85,7 +85,7 @@ rule create_covar_state_freq:
     container:
         config["R_4.2.0"]
     script:
-        "../scripts/create_covar_state_freq.R"
+        "../scripts/create_covar.R"
 
 rule permute_covars_state_freq:
     input:
@@ -135,12 +135,12 @@ rule run_mlma_loco_state_freq:
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq/true/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}.mlma"
+            "gcta/mlma_loco_state_freq/true/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}.mlma"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/run_mlma_loco/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}.log"
+            "logs/run_mlma_loco/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}.log"
         ),
     params:
         in_pref = lambda wildcards, input: input.bed.replace(".bed", ""),
@@ -172,19 +172,19 @@ rule combine_mlma_outputs_state_freq:
     input:
         expand(os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq/true/hdrr/{{interval}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{contig}.mlma"
+            "gcta/mlma_loco_state_freq/true/hdrr/{{variables}}/{{interval}}/{{n_states}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{contig}.mlma"
             ),
                 contig = list(range(1,22))
         ),
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq_consol/true/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.mlma"
+            "gcta/mlma_loco_state_freq_consol/true/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.mlma"
             ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/combine_mlma_outputs_state_freq/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
+            "logs/combine_mlma_outputs_state_freq/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
         ),
     resources:
         mem_mb = 10000,
@@ -216,12 +216,12 @@ rule run_mlma_loco_state_freq_permuted:
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq/permuted/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}/{seed}.mlma"
+            "gcta/mlma_loco_state_freq/permuted/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}/{seed}.mlma"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/run_mlma_loco_state_freq_permuted/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}/{seed}.log"
+            "logs/run_mlma_loco_state_freq_permuted/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{contig}/{seed}.log"
         ),
     params:
         in_pref = lambda wildcards, input: input.bed.replace(".bed", ""),
@@ -253,19 +253,19 @@ rule combine_mlma_outputs_state_freq_permuted:
     input:
         expand(os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq/permuted/hdrr/{{interval}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{contig}/{{seed}}.mlma"
+            "gcta/mlma_loco_state_freq/permuted/hdrr/{{variables}}/{{interval}}/{{n_states}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{contig}/{{seed}}.mlma"
             ),
                 contig = list(range(1,22))
         ),
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq_consol/permuted/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{seed}.mlma"
+            "gcta/mlma_loco_state_freq_consol/permuted/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{seed}.mlma"
             ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/combine_mlma_outputs_state_freq_permuted/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{seed}.log"
+            "logs/combine_mlma_outputs_state_freq_permuted/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}/{seed}.log"
         ),
     resources:
         mem_mb = 30000,
@@ -278,19 +278,19 @@ rule get_min_p_perms_state_freq:
     input:
         expand(os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq_consol/permuted/hdrr/{{interval}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{seed}.mlma"
+            "gcta/mlma_loco_state_freq_consol/permuted/hdrr/{{variables}}/{{interval}}/{{n_states}}/{{bin_length}}/{{cov}}/{{dge_sge}}/{{transformation}}/{{assay}}/{{state}}/{{covars}}/{seed}.mlma"
             ),
                 seed = PERM_SEEDS         
         ),
     output:
         os.path.join(
             config["workdir"],
-            "gcta/mlma_loco/min_p/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.csv"
+            "gcta/mlma_loco/min_p/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.csv"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/get_min_p_perms_state_freq/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
+            "logs/get_min_p_perms_state_freq/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}/{covars}.log"
         ),
     resources:
         mem_mb = 30000
@@ -304,11 +304,11 @@ rule get_manhattan_gcta_state_freq:
         res = rules.combine_mlma_outputs_state_freq.output,
         min_p = rules.get_min_p_perms_state_freq.output,
     output:
-        man = "book/figs/gcta/hdrr/state_freq/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.png"
+        man = "book/figs/gcta/hdrr/state_freq/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.png"
     log:
         os.path.join(
             config["workdir"],
-            "logs/get_manhattan_gcta/hdrr/{interval}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.log"
+            "logs/get_manhattan_gcta/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{assay}/{state}_{covars}.log"
         ),    
     params:
         bin_length = "{bin_length}",
@@ -317,7 +317,8 @@ rule get_manhattan_gcta_state_freq:
         transformation = "{transformation}",
         assay = "{assay}",
         covars = "{covars}",
-        pheno = "state_freq"
+        pheno = "state_freq",
+        state = "{state}"
     resources:
         mem_mb = 30000
     container:
