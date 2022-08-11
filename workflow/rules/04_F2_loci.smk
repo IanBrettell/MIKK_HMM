@@ -26,6 +26,39 @@ rule rehead_mikk_vcf:
                 2> {log}
         """
 
+# Extract REF and ALT alleles for all biallelic SNPs for annotations downstream
+rule extract_all_snps:
+    input:
+        rules.rehead_mikk_vcf.output,
+    output:
+        os.path.join(
+            config["workdir"],
+            "genos/F0/biallelic_snps_all/all.txt"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/extract_all_snps/all.log"
+        ),
+    resources:
+        mem_mb = 2000
+    container:
+        config["bcftools_1.14"]
+    shell:
+        """
+        bcftools view \
+            --min-alleles 2 \
+            --max-alleles 2 \
+            --types snps \
+            --output-type u \
+            {input} |\
+        bcftools query \
+            --print-header \
+            --format '%CHROM\\t%POS\\t%REF\\t%ALT\\n' \
+            --output {output} \
+                2> {log}
+        """
+
 # Extract genotypes of parental lines for all biallelic SNPs 
 rule extract_parental_snps:
     input:

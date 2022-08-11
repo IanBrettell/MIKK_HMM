@@ -1,18 +1,19 @@
 include: "rules/00_common.smk"
-include: "rules/01_ref.smk"
-include: "rules/01_hmm.smk"
-include: "rules/02_param_optim.smk"
-include: "rules/03_mapping.smk"
+#include: "rules/01_ref.smk"
+#include: "rules/01_hmm.smk"
+#include: "rules/02_param_optim.smk"
+#include: "rules/03_mapping.smk"
 include: "rules/04_F2_loci.smk"
-include: "rules/05_F2_calling.smk"
-include: "rules/05_KCC_calling.smk"
-include: "rules/06_F0_state_freq.smk"
-include: "rules/06_F2_state_freq.smk"
-include: "rules/07_plink_format.smk"
-include: "rules/08_relationship_metrics.smk"
-include: "rules/07_GCTA_mean_speed.smk"
+#include: "rules/05_F2_calling.smk"
+#include: "rules/05_KCC_calling.smk"
+#include: "rules/06_F0_state_freq.smk"
+#include: "rules/06_F2_state_freq.smk"
+#include: "rules/07_plink_format.smk"
+#include: "rules/08_relationship_metrics.smk"
+#include: "rules/07_GCTA_mean_speed.smk"
 include: "rules/07_GCTA_state_freq.smk"
 #include: "rules/08_figs.smk"
+include: "rules/08_annotations.smk"
 
 
 ##### Target rules #####
@@ -22,8 +23,8 @@ rule all:
 ######################
 ## 00_common.smk
 ######################
-        rules.get_line_ranks_and_colours.output,
-        rules.plot_line_median_and_variance.output,
+#        rules.get_line_ranks_and_colours.output,
+#        rules.plot_line_median_and_variance.output,
 ######################
 ## 01_ref.smk
 ######################
@@ -81,6 +82,7 @@ rule all:
 #######################
 ### 04_F2_loci.smk
 #######################
+#        rules.extract_all_snps.output,
 #        expand(rules.extract_parental_snps.output,
 #                zip,
 #                pat = PAT_UQ,
@@ -321,95 +323,107 @@ rule all:
 ######################
 ## 07_GCTA_state_freq.smk
 ######################
-        expand(rules.create_phen_state_freq.output,
+#        expand(rules.create_phen_state_freq.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16))
+#        ),
+#        expand(rules.permute_phen_state_freq.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.create_covar_state_freq.output,
+#                covars = "time-quadrant"
+#        ),
+#        expand(rules.permute_covars_state_freq.output,
+#                covars = "time-quadrant",
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.run_mlma_loco_state_freq.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "time-quadrant"],
+#                contig = list(range(1,22))
+#        ),
+#        expand(rules.combine_mlma_outputs_state_freq.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "time-quadrant"]
+#        ),
+#        expand(rules.run_mlma_loco_state_freq_permuted.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16))[0],
+#                covars = ["None", "time-quadrant"],
+#                contig = list(range(1,22)),
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.combine_mlma_outputs_state_freq_permuted.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                state = list(range(1,16)),
+#                covars = ["None", "time-quadrant"],
+#                seed = PERM_SEEDS
+#        ),
+#        expand(rules.get_manhattan_gcta_state_freq.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                state = list(range(1,16)),
+#                assay = ["open_field", "novel_object"],
+#                covars = ["None", "time-quadrant"],
+#        ),
+        expand(rules.apply_fisher_method.output,
                 variables = "dist_angle",
                 interval = 0.05,
                 n_states = 15,
+                bin_length = 5000,
+                cov = 0.8,
                 dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
+                transformation = "invnorm",
                 assay = ["open_field", "novel_object"],
-                state = list(range(1,16))
-        ),
-        expand(rules.permute_phen_state_freq.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
-                seed = PERM_SEEDS
-        ),
-        expand(rules.create_covar_state_freq.output,
-                covars = "time-quadrant"
-        ),
-        expand(rules.permute_covars_state_freq.output,
                 covars = "time-quadrant",
-                seed = PERM_SEEDS
-        ),
-        expand(rules.run_mlma_loco_state_freq.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
-                covars = ["None", "time-quadrant"],
-                contig = list(range(1,22))
-        ),
-        expand(rules.combine_mlma_outputs_state_freq.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
-                covars = ["None", "time-quadrant"]
-        ),
-        expand(rules.run_mlma_loco_state_freq_permuted.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16))[0],
-                covars = ["None", "time-quadrant"],
-                contig = list(range(1,22)),
-                seed = PERM_SEEDS
-        ),
-        expand(rules.combine_mlma_outputs_state_freq_permuted.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                state = list(range(1,16)),
-                covars = ["None", "time-quadrant"],
-                seed = PERM_SEEDS
-        ),
-        expand(rules.get_manhattan_gcta_state_freq.output,
-                variables = "dist_angle",
-                interval = 0.05,
-                n_states = 15,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                state = list(range(1,16)),
-                assay = ["open_field", "novel_object"],
-                covars = ["None", "time-quadrant"],
+                adj_method = ["nyholt", "liji", "gao", "galwey"]
         ),
 ######################
 ## 08_figs.smk
@@ -418,14 +432,17 @@ rule all:
 #                bin_length = config["bin_length"],
 #                cov = config["hmm_covariance"]
 #        ),
-        expand(rules.compile_sig_mans.output,
-                bin_length = 5000,
-                cov = 0.8,
-                dge_sge = config["dge_sge"],
-                transformation = ["notrans", "invnorm"],
-                assay = ["open_field", "novel_object"],
-                covars = ["None", "All"],
-        ),
+#        expand(rules.compile_sig_mans.output,
+#                variables = "dist_angle",
+#                interval = 0.05,
+#                n_states = 15,
+#                bin_length = 5000,
+#                cov = 0.8,
+#                dge_sge = config["dge_sge"],
+#                transformation = ["notrans", "invnorm"],
+#                assay = ["open_field", "novel_object"],
+#                covars = ["None", "time-quadrant"],
+#        ),
 #        expand(rules.plot_grm.output,
 #                bin_length = 5000,
 #                cov = 0.8
@@ -446,3 +463,12 @@ rule all:
 #                contig = list(range(1,25))
 #        ),
 #
+######################
+## 08_annotations.smk
+######################
+        expand(rules.pull_significant_snps_sf.output,
+                assay = ["open_field", "novel_object"]
+        ),
+        expand(rules.run_vep_invnorm.output,
+                assay = ["open_field", "novel_object"]
+        ),

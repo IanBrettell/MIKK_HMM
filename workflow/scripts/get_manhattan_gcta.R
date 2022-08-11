@@ -12,22 +12,21 @@ library(tidyverse)
 
 ## Debug
 
-IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_mean_speed_consol/true/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant.mlma"
-MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/0.05/5000/0.8/sge/invnorm/novel_object/time-quadrant.csv"
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_state_freq_consol/true/hdrr/dist_angle/0.05/15/5000/0.8/dge/invnorm/novel_object/1/time-quadrant.mlma"
+MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/dist_angle/0.05/15/5000/0.8/dge/invnorm/novel_object/1/time-quadrant.csv"
 BIN_LENGTH = "5000" %>% 
   as.numeric()
 COV = "0.8" %>% 
   as.numeric()
 COVARS = "time-quadrant" %>% 
-  stringr::str_replace("-", ",")
+  stringr::str_replace("-", ", ")
 STATE = "1" %>% 
   as.numeric()
 DGE_SGE = "dge" %>% 
   toupper()
 ASSAY = "novel_object"
 TRANS = "invnorm"
-PHENO = "mean_speed"
-
+PHENO = "state_freq"
 ## True
 
 IN = snakemake@input[["res"]]
@@ -45,8 +44,9 @@ STATE = snakemake@params[["state"]] %>%
 COVARS =snakemake@params[["covars"]] %>% 
   stringr::str_replace("-", ", ")
 PHENO = snakemake@params[["pheno"]]
-  stringr::str_replace("-", ",")
 OUT = snakemake@output[["man"]]
+TSV = snakemake@output[["sig"]]
+
 
 ########################
 # Plotting parameters
@@ -241,3 +241,19 @@ ggsave(OUT,
        height = 6,
        units = "in",
        dpi = 400)
+
+
+########################
+# Pull out significant hits and save
+########################
+
+sig_hits = df %>% 
+  dplyr::filter(p < PERM_SIG) %>% 
+  dplyr::select(-c(start, end, CUMSUM, TOT, MID_TOT, X_COORD)) 
+
+if (nrow(sig_hits) == 0){
+  file.create(TSV)
+} else{
+  readr::write_tsv(sig_hits, TSV)
+}
+

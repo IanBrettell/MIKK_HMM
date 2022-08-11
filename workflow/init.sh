@@ -75,5 +75,5 @@ mamba install -c hcc aspera-cli
 # Get URL
 fURL=`aspera faspex list --user="felix.loosli@kit.edu" \
                          --host="faspex.embl.de" \
-                         --password='MIKKF2#' \
+                         --password='PASSWORD' \
                          --insecure | grep "ˆFaspex URL: " | awk '{ print $NF }'`

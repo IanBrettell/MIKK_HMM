@@ -1,0 +1,11 @@
+annotations
+setup
+set-variables
+read-in-files
+within-each-assay-are-there-any-snps-that-are-shared-across-dgesge
+greedily-filter-snps
+join-sigs-to-vep
+get-hgnc-gene-names-from-biomart
+view-results
+all-snps
+greedy-snps

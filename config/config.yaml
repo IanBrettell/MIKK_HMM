@@ -136,3 +136,5 @@ GCTA:
     docker://quay.io/biocontainers/gcta:1.93.2beta--h9ee0642_1
 ImageMagick_7.1.0.43:
     docker://dpokidov/imagemagick:7.1.0.43
+ensembl_vep_104:
+    docker://ensemblorg/ensembl-vep:release_104.3

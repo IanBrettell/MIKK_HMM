@@ -1,8 +1,15 @@
 bookdown::bs4_book:
   css: style.css
   theme:
-    primary: "#096B72"
-  repo: https://github.com/rstudio/bookdown-demo
+    primary: "#C1560E"
+  repo:
+    base: https://github.com/brettellebi/MIKK_HMM
+    branch: master
+    subdir: book
+  includes:
+    in_header: css.html
+  footnotes_inline: true
+  bibliography: [book.bib, packages.bib]
 bookdown::pdf_book:
   includes:
     in_header: preamble.tex

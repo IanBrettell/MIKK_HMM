@@ -28,7 +28,7 @@ From: rocker/tidyverse:4.1.3
     R -e 'devtools::install_version("matrixStats", ">= 0.60.1", repos = "https://cloud.r-project.org/")'
     
     # Install Bioconductor packages
-    R -e 'BiocManager::install(c("karyoploteR", "GenomicRanges"))'
+    R -e 'BiocManager::install(c("karyoploteR", "GenomicRanges", "metaseqR"))'
 
     # Install ViteRbi
     R -e "devtools::install_github('tf2/ViteRbi', upgrade = 'never')"

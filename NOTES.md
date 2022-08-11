@@ -1,5 +1,15 @@
 # Notes
 
+## 10 August 2022
+
+Something very strange:
+
+We have duplicated rows for the samples collected on 20191113 in the right tank, starting from 20191113_1247
+
+SOMETHING HAPPENED DURING THE MOVEMENT METRICS STEP
+
+Due to the low frame rate in those videos.
+
 ## 1 August 2022
 
 Discovered that GCTA outputs a different GRM matrix than the one computed manually, and looks incorrect.

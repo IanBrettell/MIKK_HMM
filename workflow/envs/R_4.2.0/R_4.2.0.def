@@ -9,6 +9,7 @@ From: rocker/tidyverse:4.2.0
 
     # Install CRAN packages
     install2.r --error \
+        poolr \
         genio \
         here \
         cowplot \
