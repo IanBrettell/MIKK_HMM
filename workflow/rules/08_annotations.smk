@@ -38,17 +38,17 @@ rule pull_significant_snps_sf:
         # Significant SNPs
         sigs = os.path.join(
             config["workdir"],
-            "sig_snps/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}_sigs.csv"
+            "sig_snps/hdrr/dist_angle/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_sigs.csv"
         ),
         # Mean p-value for each significant SNP across all states and DGE/SGE
         mean_p = os.path.join(
             config["workdir"],
-            "sig_snps/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}_mean_p.csv"
+            "sig_snps/hdrr/dist_angle/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_mean_p.csv"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/pull_significant_snps_sf/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}.log"
+            "logs/pull_significant_snps_sf/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
         ),
     resources:
         mem_mb = 20000
@@ -61,11 +61,11 @@ rule prepare_vep_input:
     input:
         rules.pull_significant_snps_sf.output.sigs,
     output:
-        out = "results/annotations/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}_vep_in.txt",
+        out = "results/annotations/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_vep_in.txt",
     log:
         os.path.join(
             config["workdir"],
-            "logs/prepare_vep_input/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}.log"
+            "logs/prepare_vep_input/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
         ),
     resources:
         mem_mb = 500
@@ -78,11 +78,11 @@ rule run_vep_invnorm:
     input:
         rules.prepare_vep_input.output.out,
     output:
-        out = "results/annotations/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}_vep_out.txt",
+        out = "results/annotations/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_vep_out.txt",
     log:
         os.path.join(
             config["workdir"],
-            "logs/run_vep_invnorm/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/{assay}.log"
+            "logs/run_vep_invnorm/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
         ),
     params:
         species = lambda wildcards: config["ref"]["species"],
@@ -101,3 +101,20 @@ rule run_vep_invnorm:
             --database \
                 2> {log}
         """
+
+rule sig_snps_boxplots:
+    input:
+        bed = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.bed",
+        samples_file = config["F2_samples_file"],
+        sigs = rules.pull_significant_snps_sf.output.sigs,
+        phenos_of = expand("phens_sf/true/dist_angle/0.05/15/{dge_sge}/invorm/open_field/{state}.phen",
+            state = list(range(1,16))
+        ),
+        phenos_no = expand("phens_sf/true/dist_angle/0.05/15/{dge_sge}/invorm/novel_object/{state}.phen",
+            state = list(range(1,16))
+        ),
+    output:
+        of = "book/figs/sig_snps_boxplots/{dge_sge}_open_field.png",
+        no = "book/figs/sig_snps_boxplots/{dge_sge}_novel_object.png",
+    script:
+        "../scripts/sig_snps_boxplots.R"

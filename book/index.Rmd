@@ -31,6 +31,9 @@ names(SIGS) = c("open_field", "novel_object")
 VEP = list(here::here("results/annotations/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/open_field_vep_out.txt"),
            here::here("results/annotations/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/novel_object_vep_out.txt"))
 names(VEP) = c("open_field", "novel_object")
+
+OUT_ALL = here::here("results/annotations_final/hdrr/dist_angle/0.05/dist_angle/15/5000/0.8/invnorm/all.csv")
+OUT_GREED = here::here("results/annotations_final/hdrr/dist_angle/0.05/dist_angle/15/5000/0.8/invnorm/greedy.csv")
 ```
 
 ## Read in files
@@ -119,9 +122,11 @@ all_vep = sigs %>%
 
 greedy_vep = greedy_kept %>% 
   dplyr::full_join(vep,
-                    by = c("ASSAY", "CHROM", "POS", "REF", "ALT")) %>% 
+                   by = c("ASSAY", "CHROM", "POS", "REF", "ALT")) %>% 
   # remove unnecessary columns
-  dplyr::select(-c(Location, cDNA_position, CDS_position, Protein_position, Amino_acids, Codons, Existing_variation))
+  dplyr::select(-c(Location, cDNA_position, CDS_position, Protein_position, Amino_acids, Codons, Existing_variation)) %>% 
+  # remove rows with no p-values
+  dplyr::filter(!is.na(p))
 
 ```
 
@@ -161,18 +166,26 @@ final_greedy = dplyr::left_join(greedy_vep,
 
 ### All SNPs
 
+Counts for different consequences
+
 ```{r}
-# Counts for different consequences
+
 final_all %>% 
   dplyr::count(Consequence) %>% 
   DT::datatable(.)
+```
 
-# Unique genes
+All hits
+
+```{r}
 final_all %>% 
-  dplyr::distinct(hgnc_symbol, description) %>% 
   DT::datatable(.)
+```
 
-# Pull out missense variants
+Pull out missense variants
+
+```{r}
+
 final_all %>% 
   dplyr::filter(Consequence == "missense_variant") %>% 
   DT::datatable(.)
@@ -180,18 +193,33 @@ final_all %>%
 
 ### Greedy SNPs
 
+Counts for different consequences
+
 ```{r}
-# Counts for different consequences
 final_greedy %>% 
   dplyr::count(Consequence) %>% 
   DT::datatable(.)
+```
 
-# Show all
+Show all
+
+```{r}
 final_greedy %>% 
   DT::datatable(.)
+```
 
-# Pull out missense variants
+Pull out missense variants
+
+```{r}
 final_greedy %>% 
   dplyr::filter(Consequence == "missense_variant") %>% 
   DT::datatable(.)
 ```
+
+## Write to file
+
+```{r}
+readr::write_csv(final_all, OUT_ALL)
+readr::write_csv(final_greedy, OUT_GREED)
+```
+

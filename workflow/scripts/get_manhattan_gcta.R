@@ -11,7 +11,7 @@ library(tidyverse)
 # Get variables
 
 ## Debug
-
+### State freq
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_state_freq_consol/true/hdrr/dist_angle/0.05/15/5000/0.8/dge/invnorm/novel_object/1/time-quadrant.mlma"
 MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/dist_angle/0.05/15/5000/0.8/dge/invnorm/novel_object/1/time-quadrant.csv"
 BIN_LENGTH = "5000" %>% 
@@ -27,6 +27,21 @@ DGE_SGE = "dge" %>%
 ASSAY = "novel_object"
 TRANS = "invnorm"
 PHENO = "state_freq"
+### Mean speed
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco_mean_speed_consol/true/hdrr/0.08/5000/0.8/sge/notrans/open_field/time-quadrant.mlma"
+MIN_P = "/hps/nobackup/birney/users/ian/MIKK_HMM/gcta/mlma_loco/min_p/hdrr/0.08/5000/0.8/sge/notrans/open_field/time-quadrant.csv"
+BIN_LENGTH = "5000" %>% 
+  as.numeric()
+COV = "0.8" %>% 
+  as.numeric()
+COVARS = "time-quadrant" %>% 
+  stringr::str_replace("-", ", ")
+DGE_SGE = "sge" %>% 
+  toupper()
+ASSAY = "open_field"
+TRANS = "notrans"
+PHENO = "mean_speed"
+
 ## True
 
 IN = snakemake@input[["res"]]
@@ -110,6 +125,8 @@ med_chr_lens = med_chr_lens %>%
   # Add midpoint for each chr
   dplyr::mutate(MID_TOT = TOT + (end / 2))
 
+print("chrom lengths set")
+
 ########################
 # Read in files
 ########################
@@ -125,6 +142,8 @@ df = readr::read_tsv(IN,
   # change column names
   dplyr::rename(CHROM = Chr)
 
+print("mlma input read")
+
 # Get significance levels
 
 ## Permutations
@@ -136,6 +155,8 @@ PERM_SIG = readr::read_csv(MIN_P) %>%
 ## Bonferroni
 
 BONF_SIG = 0.05 / nrow(df)
+
+print("sig levels set")
 
 # Set title
 
@@ -157,7 +178,7 @@ if (PHENO == "mean_speed"){
   )
 }
 
-
+print("title set")
 
 SUBTITLE = paste("Transformation: ",
                  TRANS,
@@ -168,6 +189,8 @@ SUBTITLE = paste("Transformation: ",
                  "\nBin length: ",
                  BIN_LENGTH,
                  sep = "")
+
+print("subtitle set")
 
 ########################
 # Manhattan plot function
@@ -230,6 +253,8 @@ out_plot = plot_man(df,
                     perm_sig = PERM_SIG,
                     bonf_sig = BONF_SIG)
 
+print("manhattan plot generated")
+
 # Save
 ## Make sure the directory exists
 dir.create(dirname(OUT), recursive = T, showWarnings = F)
@@ -242,7 +267,7 @@ ggsave(OUT,
        units = "in",
        dpi = 400)
 
-
+print("plot saved")
 ########################
 # Pull out significant hits and save
 ########################
