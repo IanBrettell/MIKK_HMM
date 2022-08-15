@@ -238,6 +238,7 @@ rule run_mlma_loco_state_freq_permuted:
         """
         gcta64 \
             --mlma \
+            --reml-maxit 500 \
             --bfile {params.in_pref} \
             --grm {params.grm_pref} \
             --pheno {input.phen} \

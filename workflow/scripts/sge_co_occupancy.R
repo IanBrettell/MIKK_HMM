@@ -16,11 +16,12 @@ library(cowplot)
 # Get variables
 
 ## Debug
-IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.08/dist_angle/15.csv"
 N_STATES = 15
-INTERVAL = 0.05
-LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
+INTERVAL = 0.08
+LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
 
+OUT_COOC_ALL = here::here("book/figs/sge_F0/co-occupancy/dist_angle/0.08_15_cooc_all.png")
 
 ## True
 IN = snakemake@input[["data"]]
@@ -34,6 +35,7 @@ OUT_PER_STATE = snakemake@output[["box_and_heat_per_state"]]
 # Read in line colours
 line_cols = readr::read_csv(LINE_COLS)
 line_vec = line_cols$line
+pal = line_cols$colour; names(pal) = line_cols$line
 
 
 # Get number of rows (for plotting) based on number of states
@@ -138,123 +140,61 @@ kw_all = cooc %>%
 # Plot
 
 box_all = cooc %>% 
+  #dplyr::mutate(test_fish = factor(test_fish, levels = line_vec)) %>% 
   ggplot() +
-  geom_boxplot(aes(test_fish, FREQ_CONC, fill = test_fish), notch = T) +
+  geom_boxplot(aes(test_fish, FREQ_CONC, fill = test_fish)) +
+  scale_fill_manual(values = pal) +
   facet_grid(cols = vars(assay)) +
   geom_text(data = kw_all,
-            aes(x = "HdrR", y = 0.375, label = p_final),
+            aes(x = "33-1", y = 0.45, label = p_final),
             size = 4) +
   cowplot::theme_cowplot() +
-  scale_fill_manual(values = pal) +
   guides(fill = "none") +
   xlab("test fish") +
   ylab("frequency of state co-occupancy") +
-  labs(fill = "test fish")
+  labs(fill = "test fish") +
+  coord_flip() +
+  scale_x_discrete(limits = rev(levels(cooc$test_fish)))
   
   
-ggsave(OUT_BOX_ALL,
-       box_all,
+
+
+
+#######################
+# Co-occupancy median -- all states
+#######################
+
+col_all = cooc %>% 
+  dplyr::group_by(assay, test_fish) %>% 
+  summarise(median_cooc = median(FREQ_CONC)) %>% 
+  dplyr::ungroup() %>% 
+  ggplot() +
+    geom_col(aes(test_fish, median_cooc, fill = test_fish)) +
+    scale_fill_manual(values = pal) +
+    facet_grid(cols = vars(assay)) +  
+    xlab("test fish") +
+    ylab("line median for\nfrequency of state co-occupancy") +
+    coord_flip() +
+    scale_x_discrete(limits = rev(levels(cooc$test_fish))) +
+    cowplot::theme_cowplot() +
+    guides(fill = "none") 
+
+
+cooc_final = cowplot::plot_grid(box_all,
+                                col_all +
+                                  theme(axis.title.y = element_blank()),
+                                align = "hv",
+                                ncol = 2,
+                                labels = c("A", "B"),
+                                label_size = 16)
+
+ggsave(OUT_COOC_ALL,
+       cooc_final,
        device = "png",
-       width = 8,
-       height = 6,
+       width = 13,
+       height = 11,
        units = "in",
        dpi = 400)
-
-
-#######################
-# Co-occupancy boxplot -- per state
-#######################
-
-FONT_SIZE = 10
-
-cooc_per_state = sge_df %>% 
-  # pivot wider to get cols for ref and test
-  tidyr::pivot_wider(id_cols = c("run", "assay", "test_fish", "seconds"),
-                     names_from = fish,
-                     values_from = state_recode) %>% 
-  # group by run and assay
-  dplyr::group_by(run, assay, test_fish) %>% 
-  dplyr::count(run, assay, ref, test) %>% 
-  dplyr::add_count(run, assay, test_fish, wt = n, name = "nn") %>% 
-  dplyr::ungroup() %>% 
-  dplyr::mutate(FREQ_COOC = n / nn) %>% 
-  # filter for same state co-occupancy
-  dplyr::filter(ref == test)
-  
-# Get KW stat
-kw_per_state = cooc_per_state %>% 
-  dplyr::group_by(assay, ref, test) %>% 
-  rstatix::kruskal_test(FREQ_COOC ~ test_fish) %>% 
-  rstatix::adjust_pvalue(method = "fdr") %>% 
-  rstatix::add_significance(p.col = "p.adj") %>% 
-  # paste p-value and significance together
-  dplyr::mutate(p_final = dplyr::case_when(p.adj.signif == "ns" ~ paste("p =", scales::scientific(p.adj, digits = 2)),
-                                           TRUE ~ paste("p =", scales::scientific(p.adj, digits = 2), p.adj.signif)))
-
-# Plot
-
-## Polar
-polar = df %>% 
-  # select random sample of 1e5 rows
-  dplyr::slice_sample(n = 1e5) %>% 
-  # factorise `state_recode`
-  #dplyr::mutate(state_recode = factor(state_recode, levels = recode_vec)) %>% 
-  ggplot() +
-  geom_point(aes(angle_recode, log10(distance), colour = state_recode),
-             alpha = 0.3, size = 0.2) +
-  coord_polar() +
-  facet_wrap(~state_recode, nrow = N_ROWS) +
-  scale_x_continuous(labels = c(0, 90, 180, 270),
-                     breaks = c(0, 90, 180, 270)) +
-  scale_color_viridis_c(option = "inferno") +
-  guides(colour = "none") +
-  xlab("angle of travel") +
-  ylab(expression(log[10]("distance travelled in pixels"))) +
-  #ggtitle("HMM states") +
-  cowplot::theme_cowplot(font_size = FONT_SIZE) +
-  theme(plot.title = element_text(hjust = 0.5))
-
-
-## OF
-ASSAY = "open field"
-box_per_state_of = cooc_per_state %>% 
-  dplyr::filter(assay == ASSAY) %>% 
-  ggplot() +
-  geom_boxplot(aes(test_fish, FREQ_COOC, fill = test_fish), notch = T) +
-  facet_wrap(vars(ref), nrow = N_ROWS) +
-  geom_text(data = kw_per_state %>% 
-              dplyr::filter(assay == ASSAY),
-            aes(x = "HNI", y = 0.2, label = p_final),
-            size = 3) +
-  cowplot::theme_cowplot(font_size = 8) +
-  scale_fill_manual(values = pal) +
-  guides(fill = "none") +
-  xlab("test fish") +
-  ylab("frequency of state co-occupancy") +
-  ggtitle(ASSAY) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  ylim(0,max(cooc_per_state$FREQ_COOC))
-
-## NO
-ASSAY = "novel object"
-box_per_state_no = cooc_per_state %>% 
-  dplyr::filter(assay == ASSAY) %>% 
-  ggplot() +
-  geom_boxplot(aes(test_fish, FREQ_COOC, fill = test_fish), notch = T) +
-  facet_wrap(vars(ref), nrow = N_ROWS) +
-  geom_text(data = kw_per_state %>% 
-              dplyr::filter(assay == ASSAY),
-            aes(x = "HNI", y = 0.2, label = p_final),
-            size = 3) +
-  cowplot::theme_cowplot(font_size = 8) +
-  scale_fill_manual(values = pal) +
-  guides(fill = "none") +
-  xlab("test fish") +
-  ylab("frequency of state co-occupancy") +
-  ggtitle(ASSAY) +
-  theme(plot.title = element_text(hjust = 0.5)) +
-  ylim(0,max(cooc_per_state$FREQ_COOC))
-
 
 #######################
 # Co-occupancy heatmap
@@ -271,8 +211,12 @@ cooc_heat = sge_df %>%
   dplyr::ungroup() %>% 
   dplyr::mutate(FREQ_COOC = n / nn) 
 
+# Choose lines with high/low co-occupancy for heatmaps
+heat_lines = c("iCab", "8-2", "18-2", "139-4", "50-2", "38-2", "21-2", "40-1")
+
 # OF
 cooc_heat_plot = cooc_heat %>% 
+  dplyr::filter(test_fish %in% heat_lines) %>% 
   # recode NAs as character
   dplyr::mutate(across(c(ref, test),
                        ~as.character(.))) %>% 
@@ -284,9 +228,9 @@ cooc_heat_plot = cooc_heat %>%
                        ~factor(., levels = c(seq(1:N_STATES), "NA")))) %>% 
   ggplot() +
   geom_tile(aes(ref, test, fill = FREQ_COOC)) +
-  facet_grid(cols = vars(test_fish),
-             rows = vars(assay)) +
-  theme_cowplot(font_size = FONT_SIZE) +
+  facet_grid(rows = vars(test_fish),
+             cols = vars(assay)) +
+  cowplot::theme_cowplot(font_size = FONT_SIZE) +
   theme(aspect.ratio = 1) +
   #scale_x_di(breaks = unique(cooc_heat$ref)) +
   #scale_y_di(breaks = unique(cooc_heat$test))  +

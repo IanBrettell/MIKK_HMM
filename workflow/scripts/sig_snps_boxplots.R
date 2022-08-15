@@ -13,19 +13,32 @@ library(tidyverse)
 BED = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.bed"
 BIM = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.bim"
 FAM = "/hps/nobackup/birney/users/ian/MIKK_HMM/beds/F2/hdrr/5000/0.8.fam"
+LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 
+## NO
 PHENOS_DGE = as.list((list.files("/hps/nobackup/birney/users/ian/MIKK_HMM/phens_sf/true/dist_angle/0.05/15/dge/invnorm/novel_object",
                          full.names = T)))
 PHENOS_SGE = as.list((list.files("/hps/nobackup/birney/users/ian/MIKK_HMM/phens_sf/true/dist_angle/0.05/15/sge/invnorm/novel_object",
                                  full.names = T)))
-
 SAMPLES = here::here("config/F2_samples_converted.csv")
-
 SIGS = "/hps/nobackup/birney/users/ian/MIKK_HMM/sig_snps/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/novel_object_sigs.csv"
-
 N_STATES = 15
+OUT_DIR = here::here("book/figs/sig_snps_boxplots/dist_angle/0.05/15/invnorm/novel_object")
 
-OUT_DIR = here::here("book/figs/sig_snps_boxplots/novel_object")
+## OF
+PHENOS_DGE = as.list((list.files("/hps/nobackup/birney/users/ian/MIKK_HMM/phens_sf/true/dist_angle/0.05/15/dge/invnorm/open_field",
+                                 full.names = T)))
+PHENOS_SGE = as.list((list.files("/hps/nobackup/birney/users/ian/MIKK_HMM/phens_sf/true/dist_angle/0.05/15/sge/invnorm/open_field",
+                                 full.names = T)))
+SAMPLES = here::here("config/F2_samples_converted.csv")
+SIGS = "/hps/nobackup/birney/users/ian/MIKK_HMM/sig_snps/hdrr/dist_angle/dist_angle/15/5000/0.8/invnorm/open_field_sigs.csv"
+N_STATES = 15
+OUT_DIR = here::here("book/figs/sig_snps_boxplots/dist_angle/0.05/15/invnorm/open_field")
+
+
+
+
+####################
 
 dir.create(OUT_DIR, recursive = T)
 
@@ -52,10 +65,13 @@ bed = genio::read_bed(BED,
 samples = readr::read_csv(SAMPLES) %>% 
   # add cross
   dplyr::mutate(CROSS = paste(pat_line, mat_line, sep = "x")) %>% 
-  dplyr::select(SAMPLE = finclip_id, CROSS) %>% 
+  dplyr::select(SAMPLE = finclip_id, CROSS, pat_line, mat_line) %>% 
   dplyr::mutate(SAMPLE = as.character(SAMPLE)) %>% 
   # convert CROSS to factor so it's always in the same order
   dplyr::mutate(CROSS = as.factor(CROSS))
+
+line_cols = readr::read_csv(LINE_COLS)
+pal = line_cols$colour ; names(pal) = line_cols$line
 
 phen_list_dge = purrr::map(PHENOS_DGE, ~readr::read_tsv(.x, 
                                                 col_names = c("SAMPLE", "IID", "SF"),
@@ -124,9 +140,11 @@ phenos_all = purrr::map(ALL_STATES, function(TARGET_STATE){
 lapply(1:nrow(greedy_keep), function(INDEX){
   # Get locus for SNP
   TARGET_SNP = greedy_keep$SNP[INDEX]
+  TARGET_SNP = "19:4921761"
   
   # Get state
   TARGET_STATE = as.character(greedy_keep$STATE[INDEX])
+  TARGET_STATE = 9
   
   # Get index in bim for that SNP
   BIM_IND = which(bim$id == TARGET_SNP)
@@ -158,7 +176,8 @@ lapply(1:nrow(greedy_keep), function(INDEX){
   
   fig = df %>% 
     ggplot(aes(GENOS, STATE_FREQ)) +
-    geom_boxplot() +
+    gghalves::geom_half_boxplot(aes(fill = pat_line), side = "l") +
+    gghalves::geom_half_boxplot(aes(fill = mat_line), side = "r") +
     ggbeeswarm::geom_beeswarm() +
     facet_grid(rows = vars(DGE_SGE),
                cols = vars(CROSS)) +
@@ -167,7 +186,11 @@ lapply(1:nrow(greedy_keep), function(INDEX){
                   "\nState: ", TARGET_STATE,
                   sep = "")) +
     xlab("genotype") +
-    ylab("inverse-normalised\nstate frequency")  
+    ylab("inverse-normalised\nstate frequency") +
+    guides(colour = "none",
+           fill = "none") +
+    #scale_colour_manual(values = pal) +
+    scale_fill_manual(values = pal)
   
   # Save
   ## Adjust plot width by number of unique crosses
@@ -180,6 +203,7 @@ lapply(1:nrow(greedy_keep), function(INDEX){
          width = PLOT_WID,
          height = 6,
          dpi = 400)
+  #return(fig)
 })
 
 
