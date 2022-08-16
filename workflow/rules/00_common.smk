@@ -20,21 +20,21 @@ rule get_line_ranks_and_colours:
     input:
         os.path.join(
             config["workdir"],
-            "hmm_out_split/0.05/dist_angle/15/F0.csv",
+            "hmm_out_split/{interval}/dist_angle/15/F0.csv",
         ),
     output:
-        png_all = "book/figs/line_mean_speed/line_mean_speed_0.05_all.png",
-        pdf_all = "book/figs/line_mean_speed/line_mean_speed_0.05_all.pdf",
-        png_select = "book/figs/line_mean_speed/line_mean_speed_0.05_selected.png",
-        pdf_select = "book/figs/line_mean_speed/line_mean_speed_0.05_selected.pdf",
-        csv = "config/line_colours/line_colours_0.05.csv"
+        png_all = "book/figs/line_mean_speed/line_mean_speed_{interval}_all.png",
+        pdf_all = "book/figs/line_mean_speed/line_mean_speed_{interval}_all.pdf",
+        png_select = "book/figs/line_mean_speed/line_mean_speed_{interval}_selected.png",
+        pdf_select = "book/figs/line_mean_speed/line_mean_speed_{interval}_selected.pdf",
+        csv = "config/line_colours/line_colours_{interval}.csv"
     log:
         os.path.join(
             config["workdir"],
-            "logs/get_line_ranks_and_colours/all.log"
+            "logs/get_line_ranks_and_colours/{interval}.log"
         ),
     params:
-        interval = 0.08,
+        interval = "{interval}",
         selected_lines = config["selected_lines"]
     resources:
         mem_mb = lambda wildcards, attempt: attempt * 20000
@@ -47,18 +47,18 @@ rule plot_line_median_and_variance:
     input:
         dat = os.path.join(
             config["workdir"],
-            "hmm_out_split/0.05/dist_angle/15/F0.csv",
+            "hmm_out_split/{interval}/dist_angle/15/F0.csv",
         ),
         line_cols = rules.get_line_ranks_and_colours.output.csv,
     output:
-        png_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_0.05_all.png",
-        pdf_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_0.05_all.pdf",
-        png_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_selected.png",
-        pdf_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_selected.pdf",
+        png_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_{interval}_all.png",
+        pdf_all = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_{interval}_all.pdf",
+        png_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_{interval}_selected.png",
+        pdf_select = "book/figs/line_mean_speed_and_variance/line_mean_speed_variance_{interval}_selected.pdf",
     log:
         os.path.join(
             config["workdir"],
-            "logs/plot_line_median_and_variance/all.log"
+            "logs/plot_line_median_and_variance/{interval}.log"
         ),
     params:
         interval = 0.08,

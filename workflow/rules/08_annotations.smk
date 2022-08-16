@@ -5,10 +5,9 @@ rule pull_significant_snps_sf:
         # MLMA output
         res = expand(os.path.join(
             config["workdir"],
-            "gcta/mlma_loco_state_freq_consol/true/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{{assay}}/{state}/{covars}.mlma"
+            "gcta/mlma_loco_state_freq_consol/true/hdrr/{variables}/{{interval}}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{{assay}}/{state}/{covars}.mlma"
             ),
                 variables = "dist_angle",
-                interval = "0.05",
                 n_states = 15,
                 bin_length = 5000,
                 cov = 0.8,
@@ -20,10 +19,9 @@ rule pull_significant_snps_sf:
         # Minimum p-value per permutation
         min_p = expand(os.path.join(
             config["workdir"],
-            "gcta/mlma_loco/min_p/hdrr/{variables}/{interval}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{{assay}}/{state}/{covars}.csv"
+            "gcta/mlma_loco/min_p/hdrr/{variables}/{{interval}}/{n_states}/{bin_length}/{cov}/{dge_sge}/{transformation}/{{assay}}/{state}/{covars}.csv"
             ),
                 variables = "dist_angle",
-                interval = "0.05",
                 n_states = 15,
                 bin_length = 5000,
                 cov = 0.8,
@@ -38,17 +36,17 @@ rule pull_significant_snps_sf:
         # Significant SNPs
         sigs = os.path.join(
             config["workdir"],
-            "sig_snps/hdrr/dist_angle/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_sigs.csv"
+            "sig_snps/hdrr/dist_angle/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}_sigs.csv"
         ),
         # Mean p-value for each significant SNP across all states and DGE/SGE
         mean_p = os.path.join(
             config["workdir"],
-            "sig_snps/hdrr/dist_angle/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_mean_p.csv"
+            "sig_snps/hdrr/dist_angle/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}_mean_p.csv"
         ),
     log:
         os.path.join(
             config["workdir"],
-            "logs/pull_significant_snps_sf/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
+            "logs/pull_significant_snps_sf/hdrr/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}.log"
         ),
     resources:
         mem_mb = 20000
@@ -61,11 +59,11 @@ rule prepare_vep_input:
     input:
         rules.pull_significant_snps_sf.output.sigs,
     output:
-        out = "results/annotations/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_vep_in.txt",
+        out = "results/annotations/hdrr/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}_vep_in.txt",
     log:
         os.path.join(
             config["workdir"],
-            "logs/prepare_vep_input/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
+            "logs/prepare_vep_input/hdrr/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}.log"
         ),
     resources:
         mem_mb = 500
@@ -78,11 +76,11 @@ rule run_vep_invnorm:
     input:
         rules.prepare_vep_input.output.out,
     output:
-        out = "results/annotations/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}_vep_out.txt",
+        out = "results/annotations/hdrr/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}_vep_out.txt",
     log:
         os.path.join(
             config["workdir"],
-            "logs/run_vep_invnorm/hdrr/dist_angle/0.05/15/5000/0.8/invnorm/{assay}.log"
+            "logs/run_vep_invnorm/hdrr/dist_angle/{interval}/15/5000/0.8/invnorm/{assay}.log"
         ),
     params:
         species = lambda wildcards: config["ref"]["species"],

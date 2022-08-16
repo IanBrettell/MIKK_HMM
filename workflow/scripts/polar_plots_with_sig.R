@@ -16,6 +16,7 @@ library(cowplot)
 # Get variables
 
 ## Debug
+### 0.05 interval
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
 N_STATES = 15
 VARIABLES = "distance and angle of travel"
@@ -25,7 +26,19 @@ POLAR_ALL_DGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.05/dist_angl
 POLAR_ALL_DGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_dge_no.png")
 POLAR_ALL_SGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_sge_of.png")
 POLAR_ALL_SGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.05/dist_angle/15/polar_all_sge_no.png")
+### 0.08 interval
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.08/dist_angle/15.csv"
+N_STATES = 15
+VARIABLES = "distance and angle of travel"
+INTERVAL = 0.08
+SHEET_ID = "1kD2ndgmTvGlQw8YZFMztO3YoYfOdSw0SI5_BtomDuaI"
+POLAR_ALL_DGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_dge_of.png")
+POLAR_ALL_DGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_dge_no.png")
+POLAR_ALL_SGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_sge_of.png")
+POLAR_ALL_SGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_sge_no.png")
 
+# Create output directory
+dir.create(dirname(POLAR_ALL_DGE_SIG_OF), recursive = T)
 # Deauthorise google sheets so that it doesn't ask for prompt
 googlesheets4::gs4_deauth()
 

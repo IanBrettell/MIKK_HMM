@@ -22,7 +22,8 @@ runs:
 aov_google_sheet_all:
     15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0
 aov_google_sheet_select:
-    118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI
+    "0.05": 118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI
+    "0.08": 1kD2ndgmTvGlQw8YZFMztO3YoYfOdSw0SI5_BtomDuaI
 ####################
 # Parameters
 ####################

@@ -11,12 +11,22 @@ library(tidyverse)
 # Set variables
 
 ## Debug
+### 0.05 interval
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
-LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 N_STATES = 15
 SHEET_ID = "118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI"
 DGE_HIST = here::here("book/figs/state_freq_F0_select/dist_angle/0.05_15_state_freq_F0_select_dge.png")
 SGE_HIST = here::here("book/figs/state_freq_F0_select/dist_angle/0.05_15_state_freq_F0_select_sge.png")
+### 0.08 interval
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.08/dist_angle/15.csv"
+LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+N_STATES = 15
+SHEET_ID = "1kD2ndgmTvGlQw8YZFMztO3YoYfOdSw0SI5_BtomDuaI"
+DGE_HIST = here::here("book/figs/state_freq_F0_select/dist_angle/0.08_15_state_freq_F0_select_dge.png")
+SGE_HIST = here::here("book/figs/state_freq_F0_select/dist_angle/0.08_15_state_freq_F0_select_sge.png")
+
+
 SELECTED_LINES = list("8-2", "18-2", "21-2", "38-2", "40-1", "50-2") %>% 
   unlist()
 
@@ -259,7 +269,7 @@ sge_hist_pretrans = df_sge %>%
                  bins = 40) +
   facet_grid(rows = vars(state_recode),
              cols = vars(assay)) +
-  theme_bw() +
+  cowplot::theme_cowplot() +
   scale_fill_viridis_d(option = "inferno") +
   guides(fill = "none") +
   xlab("state frequency")
@@ -281,7 +291,7 @@ sge_hist_posttrans = df_sge %>%
                  bins = 40) +
   facet_grid(rows = vars(state_recode),
              cols = vars(assay)) +
-  theme_bw() +
+  cowplot::theme_cowplot() +
   scale_fill_viridis_d(option = "inferno") +
   guides(fill = "none") +
   xlab("state frequency (inverse-normalised per state)")

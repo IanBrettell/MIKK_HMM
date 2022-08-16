@@ -107,10 +107,10 @@ rule time_dependence_F2_cross_lines:
         data = rules.split_datasets.output.F0,
         line_cols = rules.get_line_ranks_and_colours.output.csv,
     output:
-        dge_of = "book/figs/time_dependence_F2_cross_lines/{variables}/{interval}_{n_states}_dge_of.png",
-        dge_no = "book/figs/time_dependence_F2_cross_lines/{variables}/{interval}_{n_states}_dge_no.png",
-        sge_of = "book/figs/time_dependence_F2_cross_lines/{variables}/{interval}_{n_states}_sge_of.png",
-        sge_no = "book/figs/time_dependence_F2_cross_lines/{variables}/{interval}_{n_states}_sge_no.png",
+        dge_of = "book/figs/time_dependence_F2_cross_lines/{variables}/select_{interval}_{n_states}_dge_of.png",
+        dge_no = "book/figs/time_dependence_F2_cross_lines/{variables}/select_{interval}_{n_states}_dge_no.png",
+        sge_of = "book/figs/time_dependence_F2_cross_lines/{variables}/select_{interval}_{n_states}_sge_of.png",
+        sge_no = "book/figs/time_dependence_F2_cross_lines/{variables}/select_{interval}_{n_states}_sge_no.png",
     log:
         os.path.join(
             config["workdir"],
@@ -118,7 +118,7 @@ rule time_dependence_F2_cross_lines:
         ),
     params:
         n_states = "{n_states}",
-        sheet_id = config["aov_google_sheet_select"],
+        sheet_id = lambda w: config["aov_google_sheet_select"][w.interval],
         selected_lines = config["selected_lines"]
     resources:
         mem_mb = 30000

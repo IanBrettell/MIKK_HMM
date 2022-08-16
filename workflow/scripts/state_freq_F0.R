@@ -11,12 +11,20 @@ library(tidyverse)
 # Set variables
 
 ## Debug
+### 0.05 interval
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.05/dist_angle/15.csv"
-LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 N_STATES = 15
 SHEET_ID = "15hj3N59E4nCFvxH4lES16PPzQ00Iawyf0QWrjaPo3I0"
 DGE_HIST = here::here("book/figs/state_freq_F0/dist_angle/0.05_15_state_freq_F0_dge.png")
 SGE_HIST = here::here("book/figs/state_freq_F0/dist_angle/0.05_15_state_freq_F0_sge.png")
+### 0.08 interval
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out/0.08/dist_angle/15.csv"
+LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+N_STATES = 15
+SHEET_ID = "1kD2ndgmTvGlQw8YZFMztO3YoYfOdSw0SI5_BtomDuaI"
+DGE_HIST = here::here("book/figs/state_freq_F0/dist_angle/0.08_15_state_freq_F0_dge.png")
+SGE_HIST = here::here("book/figs/state_freq_F0/dist_angle/0.08_15_state_freq_F0_sge.png")
 
 ## True
 IN = snakemake@input[["data"]]

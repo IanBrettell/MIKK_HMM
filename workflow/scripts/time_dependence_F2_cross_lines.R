@@ -15,6 +15,7 @@ library(googlesheets4)
 # Get variables
 
 ## Debug
+### 0.05 interval
 IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/0.05/dist_angle/15/F0.csv"
 LINE_COLS = here::here("config/line_colours/line_colours_0.05.csv")
 SHEET_ID = "118HNbI7ch_0rgRSaDB1b73mpRo5Z2g7uQvNhjZUD7WI"
@@ -29,7 +30,25 @@ OUT_DGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.0
 OUT_DGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_dge_no.png")
 OUT_SGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_sge_of.png")
 OUT_SGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/0.05_15_sge_no.png")
+### 0.08 interval
+IN = "/hps/nobackup/birney/users/ian/MIKK_HMM/hmm_out_split/0.08/dist_angle/15/F0.csv"
+LINE_COLS = here::here("config/line_colours/line_colours_0.08.csv")
+SHEET_ID = "1kD2ndgmTvGlQw8YZFMztO3YoYfOdSw0SI5_BtomDuaI"
+N_STATES = 15
+SELECTED_LINES = list("8-2", "18-2", "21-2", "38-2", "40-1", "50-2") %>% 
+  unlist()
+POLAR_ALL_DGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_dge_of.png")
+POLAR_ALL_DGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_dge_no.png")
+POLAR_ALL_SGE_SIG_OF = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_sge_of.png")
+POLAR_ALL_SGE_SIG_NO = here::here("book/figs/polar_plots_with_sig/0.08/dist_angle/15/polar_all_sge_no.png")
+OUT_DGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/select_0.08_15_dge_of.png")
+OUT_DGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/select_0.08_15_dge_no.png")
+OUT_SGE_OF = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/select_0.08_15_sge_of.png")
+OUT_SGE_NO = here::here("book/figs/time_dependence_F2_cross_lines/dist_angle/select_0.08_15_sge_no.png")
 
+
+# create output directories
+dir.create(dirname(OUT_DGE_OF), recursive = T)
 # Deauthorise google sheets so that it doesn't ask for prompt
 googlesheets4::gs4_deauth()
 
@@ -207,13 +226,13 @@ dge_tiles_final = cowplot::plot_grid(dge_tile_of,
 
 # Save 
 
-ggsave(TILE_DGE,
-       dge_tiles_final,
-       device = "png",
-       width = 13,
-       height = 22,
-       units = "in",
-       dpi = 400)
+#ggsave(TILE_DGE,
+#       dge_tiles_final,
+#       device = "png",
+#       width = 13,
+#       height = 22,
+#       units = "in",
+#       dpi = 400)
 
 #######################
 # Medarkov matrices: SGE
@@ -287,13 +306,13 @@ sge_tiles_final = cowplot::plot_grid(sge_tile_of,
 
 # Save 
 
-ggsave(TILE_SGE,
-       sge_tiles_final,
-       device = "png",
-       width = 13,
-       height = 22,
-       units = "in",
-       dpi = 400)
+#ggsave(TILE_SGE,
+#       sge_tiles_final,
+#       device = "png",
+#       width = 13,
+#       height = 22,
+#       units = "in",
+#       dpi = 400)
 
 ##########################
 # Time density - DGE
@@ -453,13 +472,13 @@ sge_dens_final = cowplot::plot_grid(time_dens_sge_of,
 
 # Save 
 
-ggsave(DENS_SGE,
-       sge_dens_final,
-       device = "png",
-       width = 13,
-       height = 22,
-       units = "in",
-       dpi = 400)
+#ggsave(DENS_SGE,
+#       sge_dens_final,
+#       device = "png",
+#       width = 13,
+#       height = 22,
+#       units = "in",
+#       dpi = 400)
 
 
 ##########################
