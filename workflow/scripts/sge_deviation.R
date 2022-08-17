@@ -138,7 +138,7 @@ control_box = control_df %>%
 #  dplyr::summarise(CONTROL_MED_FREQ = median(FREQ, na.rm = T)) %>% 
 #  dplyr::ungroup()
 
-# Calculate median frequency when with other lines
+# Calculate state frequencies 
 
 freq_df = sge_df %>% 
   # count the number of observations per state for each individual/assay combination
