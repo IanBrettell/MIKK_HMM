@@ -18,7 +18,8 @@ DGE_SGE = "dge"
 IN = snakemake@input[["data"]]
 OUT_CSV_NT = snakemake@output[["csv_notrans"]]
 OUT_CSV_IV = snakemake@output[["csv_invnorm"]]
-OUT_HIST = snakemake@output[["hist"]]
+OUT_HIST_PNG = snakemake@output[["hist_png"]]
+OUT_HIST_PDF = snakemake@output[["hist_pdf"]]
 DGE_SGE = snakemake@params[["dge_sge"]]
 
 # Get output directories for .csv files
@@ -171,9 +172,17 @@ if (DGE_SGE == "dge"){
                                 dge_hist_posttrans,
                                 align = "hv",axis = "tblr")
   
-  ggsave(OUT_HIST,
+  ggsave(OUT_HIST_PNG,
          dge_hist,
          device = "png",
+         width = 9,
+         height = 11,
+         units = "in",
+         dpi = 400)
+  
+  ggsave(OUT_HIST_PDF,
+         dge_hist,
+         device = "pdf",
          width = 9,
          height = 11,
          units = "in",
@@ -217,7 +226,7 @@ if (DGE_SGE == "sge"){
                    bins = 40) +
     facet_grid(rows = vars(state_recode),
                cols = vars(assay)) +
-    theme_bw() +
+    cowplot::theme_cowplot() +
     scale_fill_viridis_d(option = "inferno") +
     guides(fill = "none") +
     xlab("state frequency")
@@ -261,9 +270,17 @@ if (DGE_SGE == "sge"){
                                 sge_hist_posttrans,
                                 align = "hv",axis = "tblr")
   
-  ggsave(OUT_HIST,
+  ggsave(OUT_HIST_PNG,
          sge_hist,
          device = "png",
+         width = 9,
+         height = 11,
+         units = "in",
+         dpi = 400)
+  
+  ggsave(OUT_HIST_PDF,
+         sge_hist,
+         device = "pdf",
          width = 9,
          height = 11,
          units = "in",

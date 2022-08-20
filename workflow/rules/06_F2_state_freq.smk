@@ -15,7 +15,8 @@ rule state_freq_F2:
             ),
                 state = list(range(1,16))
         ),
-        hist = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_{dge_sge}.png",
+        hist_png = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_{dge_sge}.png",
+        hist_pdf = "book/figs/state_freq_F2/{variables}/{interval}_{n_states}_state_freq_F2_{dge_sge}.pdf",
     log:
         os.path.join(
             config["workdir"],

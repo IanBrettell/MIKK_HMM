@@ -1,3 +1,32 @@
+# Create a GRM for all chromosomes
+rule make_grm_man:
+    input:
+        bed = rules.create_bed_all_no_miss.output.bed,
+        F2_samples =  config["F2_samples_file"]
+    output:
+        grm = os.path.join(
+            config["workdir"],
+            "grm_man/hdrr/{bin_length}/grm_man_{cov}.grm.bin"
+        ),
+        png = "book/figs/grm_man/{bin_length}/grm_man_{cov}.png",
+        pdf = "book/figs/grm_man/{bin_length}/grm_man_{cov}.pdf"
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/make_grm_man/hdrr/{bin_length}/{cov}.log"
+        ),
+    params:
+        in_pref = lambda wildcards, input: input.bed.replace(".bed", ""),
+        out_pref = lambda wildcards, output: output.grm.replace(".grm.bin", ""),    
+    resources:
+        mem_mb = 10000,
+        threads = 1
+    container:
+        config["R_4.2.0"]
+    script:
+        "../scripts/make_grm_loco_man.R"
+
+
 # Create a LOCO-GRM for each chromosome and plot the matrix
 rule make_grm_loco_man:
     input:

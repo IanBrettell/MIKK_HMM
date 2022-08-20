@@ -14,7 +14,7 @@ include: "rules/08_relationship_metrics.smk"
 include: "rules/07_GCTA_mean_speed.smk"
 include: "rules/07_GCTA_state_freq.smk"
 include: "rules/08_figs.smk"
-#include: "rules/08_annotations.smk"
+include: "rules/08_annotations.smk"
 
 
 ##### Target rules #####
@@ -84,6 +84,7 @@ rule all:
 #        expand(rules.get_coverage.output,
 #                sample = SAMPLES
 #        ),
+        rules.plot_coverage.output,
 #######################
 ### 04_F2_loci.smk
 #######################
@@ -135,6 +136,7 @@ rule all:
 ## 05_KCC_calling.smk
 ######################
 #        expand(rules.merge_variants.output),
+#        rules.extract_KCC_calls.output,
 ######################
 ## 06_F0_state_freq.smk
 ######################
@@ -170,11 +172,11 @@ rule all:
 #                variables = "dist_angle",
 #                n_states = 15,
 #        ),
-        expand(rules.sge_deviation.output,
-                interval = 0.08,
-                variables = "dist_angle",
-                n_states = 15,
-        ),
+#        expand(rules.sge_deviation.output,
+#                interval = 0.08,
+#                variables = "dist_angle",
+#                n_states = 15,
+#        ),
 ######################
 ## 07_plink_format.smk
 ######################
@@ -222,6 +224,10 @@ rule all:
 ######################
 ## 08_relationship_metrics.smk
 ######################
+#        expand(rules.make_grm_man.output,
+#                bin_length = 5000,
+#                cov = 0.8,
+#        ),
 #        expand(rules.make_grm_loco_man.output,
 #                bin_length = 5000,
 #                cov = 0.8,
@@ -484,11 +490,13 @@ rule all:
 ######################
 ## 08_annotations.smk
 ######################
-        expand(rules.pull_significant_snps_sf.output,
-                interval = [0.05, 0.08]
-                assay = ["open_field", "novel_object"]
-        ),
-        expand(rules.run_vep_invnorm.output,
-                interval = [0.05, 0.08]
-                assay = ["open_field", "novel_object"]
-        ),
+#        expand(rules.pull_significant_snps_sf.output,
+#                interval = [0.05, 0.08],
+#        ),
+#        expand(rules.run_vep_invnorm.output,
+#                interval = [0.05, 0.08],
+#                assay = ["open_field", "novel_object"]
+#        ),
+#        expand(rules.sig_snps_boxplots.output,
+#                interval = [0.08]
+#        ),

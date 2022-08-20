@@ -69,6 +69,14 @@ rserver \
 ssh -L 8787:hl-codon-37-04:8787 proxy-codon
 
 
+# mtag container
+bsub -M 20000 -Is bash
+module load singularity-3.7.0-gcc-9.3.0-dp5ffrp
+cd /hps/software/users/birney/ian/repos/MIKK_HMM
+singularity build --remote \
+    /hps/nobackup/birney/users/ian/containers/MIKK_HMM/mtag.sif \
+    workflow/envs/mtag.def
+
 # Faspex
 ## Download aspera
 mamba install -c hcc aspera-cli

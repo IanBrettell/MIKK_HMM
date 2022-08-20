@@ -195,6 +195,47 @@ rule create_bed_all:
                 2> {log}
         """
 
+# Create a .bed for all chromosomes, but excluding all genotypes
+# With a missing call (with --geno 0)
+rule create_bed_all_no_miss:
+    input:
+        rules.combine_peds.output.ped
+    output:
+        bed = os.path.join(
+            config["workdir"],
+            "beds_no_miss/F2/hdrr/{bin_length}/{cov}.bed"
+        ),
+        fam = os.path.join(
+            config["workdir"],
+            "beds_no_miss/F2/hdrr/{bin_length}/{cov}.fam"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/create_bed_all_no_miss/hdrr/{bin_length}/{cov}.log"
+        ),
+    params:
+        in_pref = lambda wildcards, input: input[0].replace(".ped", ""),
+        out_pref = lambda wildcards, output: output.bed.replace(".bed", ""),
+    resources:
+        mem_mb = 5000
+    container:
+        config["plink1.9"]
+    shell:
+        """
+        plink1.9 \
+            --make-bed \
+            --geno 0 \
+            --no-fid \
+            --no-parents \
+            --no-sex \
+            --no-pheno \
+            --chr-set 24 no-xy no-mt \
+            --file {params.in_pref} \
+            --out {params.out_pref} \
+                2> {log}
+        """
+
 # Convert .ped to .bed for LOCO-GRMs
 ## This step removes the target chromosome (--not-chr)
 ## And all SNPs missing for at least 1 sample (--geno)

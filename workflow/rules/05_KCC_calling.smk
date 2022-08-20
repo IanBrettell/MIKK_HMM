@@ -139,3 +139,35 @@ rule merge_variants:
             OUTPUT={output[0]} \
                 &> {log}
         """
+
+rule extract_KCC_calls:
+    input:
+        rules.merge_variants.output,
+    output:
+        os.path.join(
+            config["workdir"],
+            "genos/KCC/biallelic_snps/all.txt"
+        ),
+    log:
+        os.path.join(
+            config["workdir"],
+            "logs/extract_KCC_calls/all.log"
+        ),
+    resources:
+        mem_mb = 2000
+    container:
+        config["bcftools_1.14"]
+    shell:
+        """
+        bcftools view \
+            --min-alleles 2 \
+            --max-alleles 2 \
+            --types snps \
+            --output-type u \
+            {input} |\
+        bcftools query \
+            --print-header \
+            --format '%CHROM\\t%POS\\t%REF\\t%ALT[\\t%GT]\\n' \
+            --output {output} \
+                2> {log}
+        """

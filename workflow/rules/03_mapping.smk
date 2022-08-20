@@ -252,8 +252,8 @@ rule plot_coverage:
             sample = SAMPLES
         )
     output:
-        png = "book/figs/coverage/all.png",
-        pdf = "book/figs/coverage/all.pdf"
+        png = "book/figs/coverage/coverage_F2.png",
+        pdf = "book/figs/coverage/coverage_F2.pdf"
     log:
         os.path.join(
             config["workdir"], 
